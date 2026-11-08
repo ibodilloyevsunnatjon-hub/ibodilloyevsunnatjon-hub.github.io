@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080e1b">
+<title>EduLife</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#080e1b;--panel:#101b2d;--card:#142239;--line:#293a54;--blue:#3979f6;--gold:#e6c16e;--text:#f2f5fb;--muted:#9aa9bf;--green:#39c58b;--red:#ee6878}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+#authScreen{min-height:100vh;display:grid;place-items:center;padding:18px;background:radial-gradient(circle at top,#20385c,var(--bg) 65%)}
+.auth-card{width:100%;max-width:470px;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:25px;box-shadow:0 20px 70px #0008}
+.logo{font-size:30px;font-weight:800}.logo span{color:var(--gold)}
+.auth-sub{color:var(--muted);line-height:1.5;margin:10px 0 24px}
+.muted{color:var(--muted)}
+.field{margin:13px 0}
+label{display:block;margin-bottom:7px;font-size:13px;color:#c5d1e1}
+input,select,textarea{width:100%;padding:12px;background:#0a1424;color:var(--text);border:1px solid var(--line);border-radius:10px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--blue)}
+textarea{min-height:85px;resize:vertical}
+.btn{padding:12px 16px;border:0;border-radius:10px;background:var(--blue);color:white;font-weight:700}
+.btn.gold{background:var(--gold);color:#172033}
+.btn.dark{background:#283a55}
+.btn.red{background:#923746}
+.btn:disabled{opacity:.6;cursor:wait}
+.full{width:100%}
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:18px 0}
+.role-choice{min-height:105px;background:#142943;border:1px solid var(--line);border-radius:14px;color:white;padding:14px;text-align:center}
+.role-choice .ico{font-size:27px;display:block;margin-bottom:9px}
+.role-choice.selected{border:2px solid var(--gold);background:#24354b}
+.small-btn{background:none;border:0;color:var(--gold);padding:10px 0}
+.sidebar{width:250px;position:fixed;inset:0 auto 0 0;background:#0d1728;border-right:1px solid var(--line);padding:20px 14px;overflow:auto;z-index:10}
+.brand{padding:4px 12px 22px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.brand small{display:block;color:var(--muted);font-size:10px;letter-spacing:2px;margin-top:5px}
+.nav{display:flex;flex-direction:column;gap:5px}
+.nav button{background:none;border:0;color:#b7c4d7;text-align:left;padding:12px;border-radius:10px}
+.nav button.active,.nav button:hover{background:#1a2d49;color:white}
+.nav button.active{border-left:3px solid var(--gold)}
+#app{display:none;min-height:100vh}
+.main{margin-left:250px;min-height:100vh}
+.topbar{height:70px;position:sticky;top:0;z-index:5;background:#0d1728;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 27px}
+.top-left{display:flex;align-items:center;gap:12px}
+.topbar small{color:var(--muted)}
+.avatar{width:39px;height:39px;border-radius:50%;background:var(--gold);color:#15213a;display:grid;place-items:center;font-weight:bold}
+.menu-btn{display:none;background:none;border:1px solid var(--line);color:white;border-radius:8px;padding:8px 11px}
+.content{max-width:1250px;margin:auto;padding:27px}
+.page-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.page-head h1{font-size:25px;margin:0 0 6px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:17px;margin-bottom:15px;min-width:0}
+.card h3{font-size:16px;margin:0 0 12px}
+.card p{line-height:1.5;color:var(--muted)}
+.stat{font-size:29px;color:var(--gold);font-weight:800;margin:10px 0}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.wide{grid-column:1/-1}
+.list{display:flex;flex-direction:column;gap:10px}
+.item{background:#0d192b;border:1px solid var(--line);border-radius:11px;padding:13px;overflow-wrap:anywhere}
+.item strong{display:block;margin-bottom:7px}
+.item small{color:var(--muted)}
+.badge{display:inline-block;padding:5px 9px;border-radius:20px;background:#253e62;color:#d4e3ff;font-size:11px}
+.badge.gold{background:#4b402b;color:var(--gold)}
+.badge.green{background:#164b3b;color:#83e4b9}
+.badge.red{background:#512b37;color:#ffabb5}
+.empty{border:1px dashed var(--line);border-radius:12px;text-align:center;padding:24px;color:var(--muted)}
+.notice{padding:12px 14px;background:#2b2519;border:1px solid #705b30;color:#f0d58e;border-radius:10px;line-height:1.5;margin:12px 0;overflow-wrap:anywhere}
+.table-wrap{overflow:auto}
+table{border-collapse:collapse;width:100%;min-width:450px}
+td,th{text-align:left;padding:11px;border-bottom:1px solid var(--line);font-size:13px}
+th{color:var(--gold)}
+.price{color:var(--gold);font-size:25px;font-weight:800;margin:7px 0}
+#toast{display:none;position:fixed;z-index:30;bottom:20px;left:50%;transform:translateX(-50%);padding:12px 17px;background:#223650;border:1px solid #4a668e;border-radius:12px;max-width:90%;width:max-content;box-shadow:0 8px 30px #0009;line-height:1.5;overflow-wrap:anywhere}
+@media(max-width:950px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){
+.sidebar{transform:translateX(-105%);transition:.25s;width:260px;box-shadow:12px 0 35px #0009}
+.sidebar.open{transform:translateX(0)}
+.main{margin-left:0}.menu-btn{display:block}
+.topbar{height:62px;padding:0 13px}
+.content{padding:18px 13px}
+.two{grid-template-columns:1fr}
+.card{padding:14px}
+.page-head h1{font-size:22px}
+}
+@media(max-width:390px){.grid,.form-grid{grid-template-columns:1fr}.wide{grid-column:auto}}
+</style>
+</head>
+<body>
+
+<div id="authScreen">
+ <div class="auth-card">
+  <div class="logo">Edu<span>Life</span> ✦</div>
+  <p class="auth-sub">Elektron kundalik — ta'lim, baholar va natijalar bir joyda.</p>
+
+  <div id="rolePicker">
+   <h3>Kim sifatida kirasiz?</h3>
+   <div class="role-grid">
+    <button type="button" class="role-choice" data-role="student"><span class="ico">🎓</span>O'quvchi</button>
+    <button type="button" class="role-choice" data-role="teacher"><span class="ico">📚</span>Ustoz</button>
+    <button type="button" class="role-choice" data-role="parent"><span class="ico">👨‍👩‍👧</span>Ota-ona</button>
+    <button type="button" class="role-choice" data-role="admin"><span class="ico">🛡️</span>Admin</button>
+   </div>
+  </div>
+
+  <div id="loginPanel" class="hidden">
+   <span class="badge gold" id="selectedRoleLabel"></span>
+   <h3 style="margin-top:15px">Tizimga kirish</h3>
+   <form id="loginForm">
+    <div class="field">
+     <label>Login</label>
+     <input id="loginName" required autocomplete="username" placeholder="Sizga berilgan login">
+    </div>
+    <div class="field">
+     <label>Parol</label>
+     <input id="loginPassword" type="password" required autocomplete="current-password" placeholder="Parolingiz">
+    </div>
+    <button type="submit" class="btn gold full" id="loginButton">Kirish</button>
+   </form>
+   <button class="small-btn" type="button" onclick="backToRoles()">← Rollarni tanlashga qaytish</button>
+   <p class="muted" style="font-size:12px" id="loginHint"></p>
+  </div>
+ </div>
+</div>
+
+<div id="app">
+ <aside class="sidebar" id="sidebar">
+  <div class="brand">
+   <div class="logo">Edu<span>Life</span> ✦</div>
+   <small>SMART EDUCATION PLATFORM</small>
+  </div>
+  <nav class="nav" id="nav"></nav>
+  <div style="border-top:1px solid var(--line);margin-top:18px;padding-top:15px">
+   <button class="btn dark full" type="button" onclick="logout()">Chiqish ⟵</button>
+  </div>
+ </aside>
+ <main class="main">
+  <header class="topbar">
+   <div class="top-left">
+    <button class="menu-btn" type="button" onclick="toggleMenu()">☰</button>
+    <div><strong id="topName">EduLife</strong><br><small id="topRole">Yuklanmoqda...</small></div>
+   </div>
+   <div class="avatar" id="avatar">E</div>
+  </header>
+  <section class="content" id="page"></section>
+ </main>
+</div>
+<div id="toast"></div>
+
+<script>
+const SUPABASE_URL="https://nqunhvbiiukqfswsntpf.supabase.co";
+const SUPABASE_KEY="sb_publishable_M7rhjIqZ8rFNxUKurGb4pQ_A6MF0Get";
+
+let db=null,user=null,profile=null;
+let selectedRole=null,activeRole=null,currentPage="dashboard",lastIssued=null;
+
+const $=id=>document.getElementById(id);
+
+function esc(v){
+ return String(v??"").replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
+}
+
+function toast(msg){
+ const el=$("toast");
+ el.textContent=msg;
+ el.style.display="block";
+ clearTimeout(window.toastTimer);
+ window.toastTimer=setTimeout(()=>el.style.display="none",10000);
+}
+
+function fail(e){
+ console.error("EduLife xatoligi:",e);
+ toast(e?.message||"Xatolik yuz berdi");
+}
+
+function roleName(r){
+ return ({student:"O'quvchi",teacher:"Ustoz",parent:"Ota-ona",admin:"Administrator"})[r]||r||"Foydalanuvchi";
+}
+
+function dateText(v){
+ return v?new Date(v).toLocaleString("uz-UZ",{dateStyle:"medium",timeStyle:"short"}):"—";
+}
+
+function empty(v="Hozircha ma'lumot yo'q"){
+ return `<div class="empty">${esc(v)}</div>`;
+}
+
+/* ID O'RNIGA ISM CHIQARISH */
+function makeNameMap(people){
+ return Object.fromEntries((people||[]).map(p=>[
+  p.id,
+  p.full_name||roleName(p.role)
+ ]));
+}
+
+function personName(id,map){
+ if(!id)return "—";
+ return map?.[id]||"Foydalanuvchi";
+}
+
+function makeCourseMap(courses){
+ return Object.fromEntries((courses||[]).map(c=>[c.id,c.title||"Kurs"]));
+}
+
+function courseName(id,map){
+ if(!id)return "—";
+ return map?.[id]||"Kurs nomi topilmadi";
+}
+
+function isTeacher(){
+ return activeRole==="teacher"||activeRole==="admin";
+}
+
+function isAdmin(){
+ return activeRole==="admin";
+}
+
+async function rows(table,columns="*"){
+ const {data,error}=await db.from(table).select(columns);
+ if(error)throw error;
+ return data||[];
+}
+
+async function countRows(table){
+ const {count,error}=await db.from(table).select("*",{count:"exact",head:true});
+ if(error)throw error;
+ return count||0;
+}
+
+function statCard(title,value,icon){
+ return `<div class="card"><div class="muted">${icon} ${esc(title)}</div><div class="stat">${value}</div></div>`;
+}
+
+function field(name,label,placeholder="",type="text"){
+ return `<div><label>${esc(label)}</label><input name="${esc(name)}" type="${esc(type)}" placeholder="${esc(placeholder)}" required></div>`;
+}
+
+function selectField(name,label,items,placeholder){
+ return `<div><label>${esc(label)}</label><select name="${esc(name)}" required>
+ <option value="">${esc(placeholder||"Tanlang")}</option>
+ ${items.map(x=>`<option value="${esc(x.value)}">${esc(x.label)}</option>`).join("")}
+ </select></div>`;
+}
+
+/* ROL TANLASH */
+document.querySelectorAll("[data-role]").forEach(button=>{
+ button.addEventListener("click",()=>chooseRole(button.dataset.role));
+});
+
+function chooseRole(role){
+ selectedRole=role;
+
+ document.querySelectorAll("[data-role]").forEach(b=>
+  b.classList.toggle("selected",b.dataset.role===role)
+ );
+
+ $("rolePicker").classList.add("hidden");
+ $("loginPanel").classList.remove("hidden");
+ $("selectedRoleLabel").textContent=roleName(role);
+
+ $("loginHint").textContent=role==="admin"
+  ?"Admin emailingiz va parolingiz bilan kiring."
+  :"Login va parolni administrator yoki ustoz bergan bo'lishi kerak.";
+
+ $("loginName").placeholder=role==="admin"?"Admin emailingiz":"Sizga berilgan login";
+ $("loginName").value="";
+ $("loginPassword").value="";
+ $("loginName").focus();
+}
+
+function backToRoles(){
+ $("loginPanel").classList.add("hidden");
+ $("rolePicker").classList.remove("hidden");
+ document.querySelectorAll("[data-role]").forEach(b=>b.classList.remove("selected"));
+ selectedRole=null;
+}
+
+/* LOGIN */
+$("loginForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+
+ if(!db){
+  toast("Supabase hali ulanmagan. Internetni tekshiring.");
+  return;
+ }
+
+ if(!selectedRole){
+  toast("Avval rolingizni tanlang.");
+  return;
+ }
+
+ const button=$("loginButton");
+ button.disabled=true;
+ button.textContent="Tekshirilmoqda...";
+
+ try{
+  const login=$("loginName").value.trim();
+  const password=$("loginPassword").value;
+
+  if(!login||!password)throw new Error("Login va parolni kiriting.");
+
+  const email=login.includes("@")
+   ?login.toLowerCase()
+   :login.toLowerCase()+"@login.edulife.invalid";
+
+  const {error:signOutError}=await db.auth.signOut();
+  if(signOutError)console.warn("Oldingi sessiyani yopish:",signOutError.message);
+
+  const {data,error}=await db.auth.signInWithPassword({email,password});
+
+  if(error)throw new Error("Login xatosi: "+error.message);
+  if(!data?.user)throw new Error("Supabase foydalanuvchini qaytarmadi.");
+
+  await enterApp(data.user,selectedRole);
+
+ }catch(e){
+  fail(e);
+ }finally{
+  button.disabled=false;
+  button.textContent="Kirish";
+ }
+});
+
+/* PROFILNI TOPISH VA ILОVAGA KIRISH */
+async function enterApp(authUser,chosenRole){
+ try{
+  const {data:authData,error:authError}=await db.auth.getUser();
+
+  if(authError)throw new Error("Auth tekshiruvi xatosi: "+authError.message);
+
+  const currentUser=authData?.user||authUser;
+  if(!currentUser?.id)throw new Error("Kirish sessiyasidan foydalanuvchi aniqlanmadi.");
+
+  const {data:p,error:profileError}=await db
+   .from("profiles")
+   .select("id,full_name,role,username")
+   .eq("id",currentUser.id)
+   .maybeSingle();
+
+  if(profileError){
+   throw new Error("Profilni o'qish xatosi: "+profileError.message+
+    (profileError.code?" | Kod: "+profileError.code:""));
+  }
+
+  if(!p)throw new Error("Profil topilmadi. Supabase profiles jadvalidagi foydalanuvchi yozuvini tekshiring.");
+
+  const realRole=String(p.role||"").toLowerCase();
+  if(!realRole)throw new Error("Profil topildi, lekin role ustuni bo'sh.");
+
+  if(realRole==="admin"){
+   const adminCanEnter=["admin","teacher","student"].includes(chosenRole);
+
+   if(!adminCanEnter){
+    await db.auth.signOut();
+    throw new Error("Administrator ota-ona sifatida kira olmaydi.");
+   }
+  }else if(realRole!==chosenRole){
+   await db.auth.signOut();
+   throw new Error("Tanlangan rol bu akkauntga mos emas. Sizning haqiqiy rolingiz: "+roleName(realRole));
+  }
+
+  user=currentUser;
+  profile=p;
+  activeRole=chosenRole;
+
+  $("authScreen").style.display="none";
+  $("app").style.display="block";
+
+  $("topName").textContent=profile.full_name||user.email;
+  $("topRole").textContent=roleName(activeRole)+
+   (realRole==="admin"&&activeRole!=="admin"?" · Admin ko'rinishi":"");
+
+  $("avatar").textContent=(profile.full_name||"E").charAt(0).toUpperCase();
+
+  buildNav();
+  await go("dashboard");
+
+ }catch(e){
+  user=null;
+  profile=null;
+  activeRole=null;
+
+  $("app").style.display="none";
+  $("authScreen").style.display="grid";
+
+  throw e;
+ }
+}
+
+/* CHIQISH */
+async function logout(){
+ const {error}=await db.auth.signOut();
+ if(error)console.error(error);
+
+ user=null;
+ profile=null;
+ activeRole=null;
+ selectedRole=null;
+ lastIssued=null;
+
+ $("app").style.display="none";
+ $("authScreen").style.display="grid";
+ $("loginPanel").classList.add("hidden");
+ $("rolePicker").classList.remove("hidden");
+
+ toast("Tizimdan chiqdingiz");
+}
+
+/* NAVIGATSIYA */
+const baseNav=[
+ ["dashboard","⌂","Bosh sahifa"],
+ ["courses","▣","Kurslar"],
+ ["grades","★","Baholar"],
+ ["attendance","✓","Davomat"],
+ ["assignments","✎","Uy vazifalari"],
+ ["comments","☰","Izohlar"],
+ ["messages","✉","Xabarlar"],
+ ["schedule","▦","Dars jadvali"],
+ ["statistics","▤","Statistika"],
+ ["profile","◉","Profil"]
+];
+
+function buildNav(){
+ let items=[...baseNav];
+
+ if(isTeacher())items.splice(1,0,["accounts","♙","Akkauntlar"]);
+
+ if(isAdmin()){
+  items=items.filter(x=>["dashboard","accounts","statistics","profile"].includes(x[0]));
+ }
+
+ $("nav").innerHTML=items.map(([id,ico,title])=>
+  `<button type="button" data-page="${id}" class="${id===currentPage?"active":""}">${ico} &nbsp; ${title}</button>`
+ ).join("");
+
+ $("nav").querySelectorAll("[data-page]").forEach(b=>
+  b.addEventListener("click",()=>go(b.dataset.page))
+ );
+}
+
+function toggleMenu(){
+ $("sidebar").classList.toggle("open");
+}
+
+async function go(page){
+ currentPage=page;
+ $("sidebar").classList.remove("open");
+ buildNav();
+
+ $("page").innerHTML='<div class="card">Yuklanmoqda...</div>';
+
+ const map={
+  dashboard:renderDashboard,
+  accounts:renderAccounts,
+  courses:renderCourses,
+  grades:renderGrades,
+  attendance:renderAttendance,
+  assignments:renderAssignments,
+  comments:renderComments,
+  messages:renderMessages,
+  schedule:renderSchedule,
+  statistics:renderStatistics,
+  profile:renderProfile
+ };
+
+ try{
+  if(!map[page])throw new Error("Bo'lim topilmadi");
+  await map[page]();
+ }catch(e){
+  fail(e);
+ }
+}
+
+/* BOSH SAHIFA */
+async function renderDashboard(){
+ const [c,g,a,t]=await Promise.all([
+  countRows("courses"),
+  countRows("grades"),
+  countRows("attendance"),
+  countRows("assignments")
+ ]);
+
+ let family="";
+
+ if(activeRole==="parent"){
+  const [links,people]=await Promise.all([
+   rows("parent_student_links","student_id"),
+   rows("profiles","id,full_name,role")
+  ]);
+
+  const names=makeNameMap(people);
+
+  family=`<div class="card"><h3>Farzandlaringiz</h3>
+   ${links.length?links.map(l=>`<p>👤 <b>${esc(personName(l.student_id,names))}</b></p>`).join(""):empty("Farzand hali bog'lanmagan")}
+  </div>`;
+ }
+
+ $("page").innerHTML=`
+  <div class="page-head">
+   <div><h1>Assalomu alaykum, ${esc(profile.full_name)}!</h1>
+   <p class="muted">EduLife shaxsiy boshqaruv paneli.</p></div>
+   <span class="badge gold">${esc(roleName(activeRole))}</span>
+  </div>
+
+  ${profile.role==="admin"&&activeRole!=="admin"?`<div class="notice">Admin rejimi: hozir ${esc(roleName(activeRole))} interfeysini ko'ryapsiz. Ota-ona rejimi administrator uchun yopiq.</div>`:""}
+
+  <div class="grid">
+   ${statCard("Kurslar",c,"▣")}
+   ${statCard("Baholar",g,"★")}
+   ${statCard("Davomat",a,"✓")}
+   ${statCard("Vazifalar",t,"✎")}
+  </div>
+
+  ${family}
+
+  <div class="two">
+   <div class="card"><h3>EduLife</h3><p>Barcha o'quv jarayoni bir joyda.</p><button class="btn gold" onclick="go('courses')">Kurslarni ochish</button></div>
+   <div class="card"><h3>Hisobingiz</h3><p>${esc(profile.username||user.email)}</p><p>Ko'rinish: ${esc(roleName(activeRole))}</p></div>
+  </div>`;
+}
+
+/* AKKAUNTLAR */
+async function renderAccounts(){
+ if(!isTeacher())throw new Error("Bu bo'lim faqat ustoz va admin uchun");
+
+ const people=await rows("profiles","id,full_name,role,username");
+ let html=`<div class="page-head"><div><h1>Akkauntlar</h1><p class="muted">Login va parollarni shu yerdan bering.</p></div></div>`;
+
+ if(isAdmin()){
+  html+=`<div class="card"><h3>Yangi ustoz akkaunti</h3>
+   <form id="issueTeacherForm">
+    <input type="hidden" name="role" value="teacher">
+    <div class="form-grid">
+     ${field("full_name","Ustozning ism-familiyasi","Masalan: Ali Valiyev")}
+     ${field("username","Ustoz logini","Masalan: ali_ustoz")}
+     ${field("password","Boshlang'ich parol","Kamida 8 belgi","text")}
+     <div class="wide"><button class="btn gold">Ustoz akkauntini yaratish</button></div>
+    </div>
+   </form>
+  </div>`;
+ }else{
+  const courses=(await rows("courses","id,title,teacher_id")).filter(c=>c.teacher_id===user.id);
+  const students=people.filter(p=>p.role==="student");
+
+  html+=`<div class="card"><h3>Yangi o'quvchi akkaunti</h3>
+   <form id="issueStudentForm">
+    <input type="hidden" name="role" value="student">
+    <div class="form-grid">
+     ${field("full_name","O'quvchining ism-familiyasi","Masalan: Vali Aliyev")}
+     ${field("username","O'quvchi logini","Masalan: vali_09")}
+     ${field("password","Boshlang'ich parol","Kamida 8 belgi","text")}
+     <div><label>Kurs</label><select name="course_id" required>
+      <option value="">Kursni tanlang</option>
+      ${courses.map(c=>`<option value="${esc(c.id)}">${esc(c.title)}</option>`).join("")}
+     </select></div>
+     <div class="wide"><button class="btn gold">O'quvchi akkauntini yaratish</button></div>
+    </div>
+   </form>
+  </div>
+
+  <div class="card"><h3>Yangi ota-ona akkaunti</h3>
+   <form id="issueParentForm">
+    <input type="hidden" name="role" value="parent">
+    <div class="form-grid">
+     ${field("full_name","Ota-onaning ism-familiyasi","Masalan: Malika Aliyeva")}
+     ${field("username","Ota-ona logini","Masalan: malika_ona")}
+     ${field("password","Boshlang'ich parol","Kamida 8 belgi","text")}
+     <div><label>Farzand</label><select name="student_id" required>
+      <option value="">O'quvchini tanlang</option>
+      ${students.map(p=>`<option value="${esc(p.id)}">${esc(p.full_name||"O'quvchi")}</option>`).join("")}
+     </select></div>
+     <div class="wide"><button class="btn gold">Ota-ona akkauntini yaratish</button></div>
+    </div>
+   </form>
+  </div>`;
+
+  if(!courses.length){
+   html+=`<div class="notice">Avval Kurslar bo'limida kurs yarating. Keyin o'quvchiga login bering.</div>`;
+  }
+ }
+
+ if(lastIssued){
+  html+=`
+  <div class="card"><h3>Oxirgi yaratilgan akkaunt</h3>
+   <p>Ism: <b>${esc(lastIssued.name)}</b></p>
+   <p>Rol: <b>${esc(roleName(lastIssued.role))}</b></p>
+   <p>Login: <b>${esc(lastIssued.username)}</b></p>
+   <p>Vaqtinchalik parol: <b>${esc(lastIssued.password)}</b></p>
+   <button class="btn dark" onclick="copyCredentials()">Login va parolni nusxalash</button>
+   <div class="notice">Login-parolni tegishli foydalanuvchiga xavfsiz tarzda bering. Parol doimiy ro'yxatda ochiq saqlanmaydi.</div>
+  </div>`;
+ }
+
+ html+=`<div class="card"><h3>Foydalanuvchilar (${people.length})</h3><div class="table-wrap">
+  <table><thead><tr><th>Ism</th><th>Login</th><th>Rol</th></tr></thead><tbody>
+  ${people.map(p=>`<tr><td>${esc(p.full_name||"Ism kiritilmagan")}</td><td>${esc(p.username||"—")}</td><td>${esc(roleName(p.role))}</td></tr>`).join("")}
+  </tbody></table></div></div>`;
+
+ $("page").innerHTML=html;
+}
+
+async function issueAccount(form){
+ const f=new FormData(form);
+
+ const body={
+  full_name:String(f.get("full_name")||"").trim(),
+  username:String(f.get("username")||"").trim().toLowerCase(),
+  password:String(f.get("password")||""),
+  role:String(f.get("role")||"")
+ };
+
+ if(body.full_name.length<2)throw new Error("Ism-familiyani to'liq kiriting.");
+ if(body.username.length<3)throw new Error("Login kamida 3 belgidan iborat bo'lsin.");
+ if(body.password.length<8)throw new Error("Parol kamida 8 belgidan iborat bo'lsin.");
+
+ if(f.get("course_id"))body.course_id=f.get("course_id");
+ if(f.get("student_id"))body.student_id=f.get("student_id");
+
+ const {data,error}=await db.functions.invoke("create-account",{body});
+
+ if(error){
+  let msg=error.message;
+  try{
+   const detail=await error.context.json();
+   msg=detail.error||msg;
+   if(detail.details)msg+=": "+detail.details;
+  }catch{}
+  throw new Error(msg);
+ }
+
+ if(!data?.success)throw new Error(data?.error||"Akkaunt yaratilmadi");
+
+ lastIssued={
+  name:body.full_name,
+  username:data.username||body.username,
+  password:body.password,
+  role:body.role
+ };
+
+ toast("Akkaunt muvaffaqiyatli yaratildi");
+ await go("accounts");
+}
+
+function copyCredentials(){
+ if(!lastIssued)return;
+
+ const text=`EduLife login: ${lastIssued.username}\nParol: ${lastIssued.password}\nRol: ${roleName(lastIssued.role)}`;
+
+ if(navigator.clipboard?.writeText){
+  navigator.clipboard.writeText(text)
+   .then(()=>toast("Login va parol nusxalandi"))
+   .catch(()=>toast("Login: "+lastIssued.username+" | Parol: "+lastIssued.password));
+ }else{
+  toast("Login: "+lastIssued.username+" | Parol: "+lastIssued.password);
+ }
+}
+
+/* KURSLAR */
+async function renderCourses(){
+ const [courses,people]=await Promise.all([
+  rows("courses","id,title,description,teacher_id,created_at"),
+  rows("profiles","id,full_name,role")
+ ]);
+
+ const names=makeNameMap(people);
+
+ let html=`<div class="page-head"><div><h1>Kurslar</h1><p class="muted">Ta'lim kurslarini boshqarish.</p></div></div>`;
+
+ if(isTeacher()){
+  html+=`
+  <div class="card"><h3>Yangi kurs yaratish</h3><form id="courseForm" class="form-grid">
+   ${field("title","Kurs nomi","Masalan: Matematika")}
+   ${field("description","Kurs tavsifi","Qisqacha ma'lumot")}
+   <div class="wide"><button class="btn gold">Kurs yaratish</button></div>
+  </form></div>`;
+ }
+
+ if(activeRole==="student"){
+  html+=`
+  <div class="card"><h3>Kursga qo'shilish</h3>
+   ${courses.length?`<form id="joinForm">
+    ${selectField("course_id","Kursni tanlang",courses.map(c=>({value:c.id,label:c.title})),"Kurs nomini tanlang")}
+    <button class="btn" style="margin-top:10px">Kursga qo'shilish</button>
+   </form>`:empty("Hozircha kurslar yo'q")}
+  </div>`;
+ }
+
+ html+='<div class="grid">';
+
+ for(const c of courses){
+  html+=`<div class="card"><h3>${esc(c.title)}</h3>
+   <p>${esc(c.description||"")}</p>
+   <small class="muted">Ustoz: ${esc(personName(c.teacher_id,names))}</small>
+  </div>`;
+ }
+
+ html+='</div>';
+
+ $("page").innerHTML=html+(courses.length?"":empty("Hozircha kurslar yo'q"));
+}
+
+async function createCourse(form){
+ const f=new FormData(form);
+
+ const {error}=await db.from("courses").insert({
+  title:f.get("title").trim(),
+  description:f.get("description").trim(),
+  teacher_id:user.id
+ });
+
+ if(error)throw error;
+
+ toast("Kurs yaratildi");
+ await go("courses");
+}
+
+async function joinCourse(form){
+ const id=new FormData(form).get("course_id");
+
+ if(!id)throw new Error("Kursni tanlang.");
+
+ const {error}=await db.from("course_enrollments").insert({
+  course_id:id,
+  student_id:user.id
+ });
+
+ if(error)throw error;
+
+ toast("Kursga qo'shildingiz");
+ await go("courses");
+}
+
+/* BAHOLAR */
+async function renderGrades(){
+ const [data,courses,people]=await Promise.all([
+  rows("grades","id,student_id,course_id,grade,grade_type,explanation,created_at"),
+  rows("courses","id,title,teacher_id"),
+  rows("profiles","id,full_name,role")
+ ]);
+
+ const cm=makeCourseMap(courses);
+ const pm=makeNameMap(people);
+ const own=courses.filter(c=>isAdmin()||c.teacher_id===user.id);
+
+ let html=`<div class="page-head"><div><h1>Baholar</h1><p class="muted">Baholar va ustoz izohlari.</p></div></div>`;
+
+ if(isTeacher()){
+  html+=`
+  <div class="card"><h3>Baho qo'yish</h3><form id="gradeForm" class="form-grid">
+   ${selectField("course_id","Kurs",own.map(c=>({value:c.id,label:c.title})),"Kursni tanlang")}
+   ${selectField("student_id","O'quvchi",people.filter(p=>p.role==="student").map(p=>({value:p.id,label:p.full_name||"O'quvchi"})),"O'quvchini tanlang")}
+   ${field("grade","Baho (0–100)","Masalan: 90","number")}
+   <div><label>Baho turi</label><select name="grade_type"><option value="daily">Kundalik</option><option value="exam">Imtihon</option><option value="course">Kurs</option></select></div>
+   <div class="wide"><label>Izoh / sabab</label><textarea name="explanation"></textarea></div>
+   <div class="wide"><button class="btn gold">Bahoni saqlash</button></div>
+  </form></div>`;
+ }
+
+ html+='<div class="list">';
+
+ for(const g of data){
+  html+=`<div class="item"><strong>${esc(courseName(g.course_id,cm))} — <span class="badge gold">${esc(g.grade)}</span></strong>
+   <div>${esc(g.explanation||"Izoh yo'q")}</div>
+   <small>${esc(personName(g.student_id,pm))} · ${esc(g.grade_type)} · ${dateText(g.created_at)}</small></div>`;
+ }
+
+ html+='</div>';
+
+ $("page").innerHTML=html+(data.length?"":empty("Hozircha baholar yo'q"));
+}
+
+async function createGrade(form){
+ const f=new FormData(form);
+ const grade=Number(f.get("grade"));
+
+ if(!Number.isFinite(grade)||grade<0||grade>100){
+  throw new Error("Baho 0–100 oralig'ida bo'lsin");
+ }
+
+ const {error}=await db.from("grades").insert({
+  course_id:f.get("course_id"),
+  student_id:f.get("student_id"),
+  teacher_id:user.id,
+  grade,
+  grade_type:f.get("grade_type"),
+  explanation:f.get("explanation").trim()
+ });
+
+ if(error)throw error;
+
+ toast("Baho saqlandi");
+ await go("grades");
+}
+
+/* DAVOMAT */
+async function renderAttendance(){
+ const [data,courses,people]=await Promise.all([
+  rows("attendance","id,student_id,course_id,status,attendance_date,note"),
+  rows("courses","id,title,teacher_id"),
+  rows("profiles","id,full_name,role")
+ ]);
+
+ const cm=makeCourseMap(courses);
+ const pm=makeNameMap(people);
+ const own=courses.filter(c=>isAdmin()||c.teacher_id===user.id);
+
+ let html=`<div class="page-head"><div><h1>Davomat</h1><p class="muted">Darsga qatnashish.</p></div></div>`;
+
+ if(isTeacher()){
+  html+=`
+  <div class="card"><h3>Davomat belgilash</h3><form id="attendanceForm" class="form-grid">
+   ${selectField("course_id","Kurs",own.map(c=>({value:c.id,label:c.title})),"Kursni tanlang")}
+   ${selectField("student_id","O'quvchi",people.filter(p=>p.role==="student").map(p=>({value:p.id,label:p.full_name||"O'quvchi"})),"O'quvchini tanlang")}
+   <div><label>Holat</label><select name="status"><option value="present">Keldi</option><option value="absent">Kelmagan</option><option value="late">Kechikdi</option></select></div>
+   ${field("attendance_date","Sana","","date")}
+   <div class="wide"><label>Izoh</label><textarea name="note"></textarea></div>
+   <div class="wide"><button class="btn gold">Saqlash</button></div>
+  </form></div>`;
+ }
+
+ html+='<div class="list">';
+
+ for(const a of data){
+  const label={present:"Keldi",absent:"Kelmagan",late:"Kechikdi"}[a.status]||a.status;
+
+  html+=`<div class="item"><strong>${esc(courseName(a.course_id,cm))} <span class="badge">${esc(label)}</span></strong>
+   <div>${esc(a.note||"")}</div>
+   <small>${esc(personName(a.student_id,pm))} · ${esc(a.attendance_date||"")}</small></div>`;
+ }
+
+ html+='</div>';
+
+ $("page").innerHTML=html+(data.length?"":empty("Davomat yozuvlari yo'q"));
+}
+
+async function createAttendance(form){
+ const f=new FormData(form);
+
+ const {error}=await db.from("attendance").insert({
+  course_id:f.get("course_id"),
+  student_id:f.get("student_id"),
+  teacher_id:user.id,
+  status:f.get("status"),
+  attendance_date:f.get("attendance_date")||new Date().toISOString().slice(0,10),
+  note:f.get("note").trim()
+ });
+
+ if(error)throw error;
+
+ toast("Davomat saqlandi");
+ await go("attendance");
+}
+
+/* UY VAZIFALARI */
+async function renderAssignments(){
+ const [data,courses,subs,people]=await Promise.all([
+  rows("assignments","id,course_id,title,description,due_at"),
+  rows("courses","id,title,teacher_id"),
+  rows("submissions","id,assignment_id,student_id,content,score,submitted_at"),
+  rows("profiles","id,full_name,role")
+ ]);
+
+ const cm=makeCourseMap(courses);
+ const pm=makeNameMap(people);
+ const own=courses.filter(c=>isAdmin()||c.teacher_id===user.id);
+
+ let html=`<div class="page-head"><div><h1>Uy vazifalari</h1><p class="muted">Topshiriqlar va javoblar.</p></div></div>`;
+
+ if(isTeacher()){
+  html+=`
+  <div class="card"><h3>Vazifa yaratish</h3><form id="assignmentForm" class="form-grid">
+   ${selectField("course_id","Kurs",own.map(c=>({value:c.id,label:c.title})),"Kursni tanlang")}
+   ${field("title","Vazifa nomi","Masalan: 5-mashq")}
+   <div class="wide"><label>Tavsif</label><textarea name="description" required></textarea></div>
+   ${field("due_at","Muddati","","datetime-local")}
+   <div class="wide"><button class="btn gold">Vazifa yaratish</button></div>
+  </form></div>`;
+ }
+
+ html+='<div class="list">';
+
+ for(const a of data){
+  const mine=subs.find(s=>s.assignment_id===a.id&&s.student_id===user.id);
+  const answers=subs.filter(s=>s.assignment_id===a.id);
+
+  html+=`<div class="item"><strong>${esc(a.title)}</strong>
+   <div>${esc(a.description||"")}</div>
+   <small>Kurs: ${esc(courseName(a.course_id,cm))} · Muddat: ${dateText(a.due_at)}</small>
+
+   ${activeRole==="student"?`
+    <form class="submissionForm" data-assignment="${esc(a.id)}" style="margin-top:12px">
+     <label>Javobingiz</label>
+     <textarea name="content" required>${esc(mine?.content||"")}</textarea>
+     <button class="btn" style="margin-top:8px">${mine?"Javobni yangilash":"Javob yuborish"}</button>
+    </form>`:""}
+
+   ${isTeacher()?`<details style="margin-top:10px"><summary>Yuborilgan javoblar (${answers.length})</summary>
+    ${answers.map(s=>`<p><b>${esc(personName(s.student_id,pm))}:</b> ${esc(s.content)}</p>`).join("")||empty("Javoblar yo'q")}
+   </details>`:""}
+  </div>`;
+ }
+
+ html+='</div>';
+
+ $("page").innerHTML=html+(data.length?"":empty("Hozircha vazifalar yo'q"));
+}
+
+async function createAssignment(form){
+ const f=new FormData(form);
+
+ const {error}=await db.from("assignments").insert({
+  course_id:f.get("course_id"),
+  teacher_id:user.id,
+  title:f.get("title").trim(),
+  description:f.get("description").trim(),
+  due_at:f.get("due_at")?new Date(f.get("due_at")).toISOString():null
+ });
+
+ if(error)throw error;
+
+ toast("Vazifa yaratildi");
+ await go("assignments");
+}
+
+async function submitAssignment(form){
+ const content=new FormData(form).get("content").trim();
+ const assignment_id=form.dataset.assignment;
+
+ const {data:old,error}=await db.from("submissions")
+  .select("id")
+  .eq("assignment_id",assignment_id)
+  .eq("student_id",user.id)
+  .maybeSingle();
+
+ if(error)throw error;
+
+ const res=old
+  ?await db.from("submissions").update({content}).eq("id",old.id)
+  :await db.from("submissions").insert({assignment_id,student_id:user.id,content});
+
+ if(res.error)throw res.error;
+
+ toast("Javob yuborildi");
+ await go("assignments");
+}
+
+/* IZOHLAR */
+async function renderComments(){
+ const [data,courses,people]=await Promise.all([
+  rows("course_comments","id,course_id,student_id,teacher_id,body,created_at"),
+  rows("courses","id,title"),
+  rows("profiles","id,full_name,role")
+ ]);
+
+ const cm=makeCourseMap(courses);
+ const pm=makeNameMap(people);
+
+ let html=`<div class="page-head"><div><h1>Izohlar</h1><p class="muted">Kurs bo'yicha fikrlar.</p></div></div>`;
+
+ if(activeRole==="student"||isTeacher()){
+  html+=`
+  <div class="card"><h3>Izoh yozish</h3><form id="commentForm">
+   <div class="field"><label>Kurs</label><select name="course_id" required>
+    ${courses.map(c=>`<option value="${esc(c.id)}">${esc(c.title)}</option>`).join("")}
+   </select></div>
+   <div class="field"><label>Izoh</label><textarea name="body" required></textarea></div>
+   <button class="btn gold">Yuborish</button>
+  </form></div>`;
+ }
+
+ html+='<div class="list">';
+
+ for(const c of data){
+  const authorId=c.student_id||c.teacher_id;
+
+  html+=`<div class="item"><strong>${esc(courseName(c.course_id,cm))}</strong>
+   <div>${esc(c.body)}</div>
+   <small>${esc(personName(authorId,pm))} · ${dateText(c.created_at)}</small></div>`;
+ }
+
+ html+='</div>';
+
+ $("page").innerHTML=html+(data.length?"":empty("Izohlar yo'q"));
+}
+
+async function createComment(form){
+ const f=new FormData(form);
+ const teacher=isTeacher();
+
+ const {error}=await db.from("course_comments").insert({
+  course_id:f.get("course_id"),
+  student_id:teacher?null:user.id,
+  teacher_id:teacher?user.id:null,
+  body:f.get("body").trim()
+ });
+
+ if(error)throw error;
+
+ toast("Izoh yuborildi");
+ await go("comments");
+}
+
+/* XABARLAR */
+async function renderMessages(){
+ const [data,people]=await Promise.all([
+  rows("messages","id,sender_id,receiver_id,body,created_at"),
+  rows("profiles","id,full_name,role")
+ ]);
+
+ const pm=makeNameMap(people);
+
+ const recipients=people
+  .filter(p=>p.id!==user.id)
+  .map(p=>({
+   value:p.id,
+   label:(p.full_name||"Foydalanuvchi")+" · "+roleName(p.role)
+  }));
+
+ const visible=data.filter(m=>!String(m.body||"").startsWith("EDULIFE_ROLE_"));
+
+ let html=`
+ <div class="page-head"><div><h1>Xabarlar</h1><p class="muted">Shaxsiy xabarlar.</p></div></div>
+ <div class="card"><h3>Xabar yuborish</h3><form id="messageForm">
+  ${selectField("receiver_id","Qabul qiluvchi",recipients,"Ismni tanlang")}
+  <div class="field"><label>Xabar</label><textarea name="body" required></textarea></div>
+  <button class="btn gold">Yuborish</button>
+ </form></div><div class="list">`;
+
+ for(const m of visible){
+  const outgoing=m.sender_id===user.id;
+  const otherId=outgoing?m.receiver_id:m.sender_id;
+  const otherName=personName(otherId,pm);
+
+  html+=`<div class="item"><strong>${outgoing?"Siz → "+esc(otherName):esc(otherName)+" → Siz"}</strong>
+   <div>${esc(m.body)}</div>
+   <small>${dateText(m.created_at)}</small></div>`;
+ }
+
+ html+='</div>';
+
+ $("page").innerHTML=html+(visible.length?"":empty("Xabarlar yo'q"));
+}
+
+async function createMessage(form){
+ const f=new FormData(form);
+ const receiver=f.get("receiver_id");
+ const body=String(f.get("body")||"").trim();
+
+ if(!receiver)throw new Error("Qabul qiluvchini tanlang.");
+ if(!body)throw new Error("Xabar matnini kiriting.");
+
+ const {error}=await db.from("messages").insert({
+  sender_id:user.id,
+  receiver_id:receiver,
+  body
+ });
+
+ if(error)throw error;
+
+ toast("Xabar yuborildi");
+ await go("messages");
+}
+
+/* DARS JADVALI */
+async function renderSchedule(){
+ const [data,courses]=await Promise.all([
+  rows("lesson_schedule","id,course_id,day_of_week,start_time,end_time,room"),
+  rows("courses","id,title,teacher_id")
+ ]);
+
+ const cm=makeCourseMap(courses);
+ const own=courses.filter(c=>isAdmin()||c.teacher_id===user.id);
+ const days=["","Dushanba","Seshanba","Chorshanba","Payshanba","Juma","Shanba","Yakshanba"];
+
+ let html=`<div class="page-head"><div><h1>Dars jadvali</h1><p class="muted">Haftalik jadval.</p></div></div>`;
+
+ if(isTeacher()){
+  html+=`
+  <div class="card"><h3>Dars qo'shish</h3><form id="scheduleForm" class="form-grid">
+   ${selectField("course_id","Kurs",own.map(c=>({value:c.id,label:c.title})),"Kursni tanlang")}
+   <div><label>Hafta kuni</label><select name="day_of_week">${days.slice(1).map((d,i)=>`<option value="${i+1}">${d}</option>`).join("")}</select></div>
+   ${field("start_time","Boshlanish vaqti","","time")}
+   ${field("end_time","Tugash vaqti","","time")}
+   ${field("room","Xona","Xona raqami")}
+   <div class="wide"><button class="btn gold">Saqlash</button></div>
+  </form></div>`;
+ }
+
+ html+='<div class="list">';
+
+ for(const s of data){
+  html+=`<div class="item"><strong>${esc(courseName(s.course_id,cm))}</strong>
+   <div>${days[s.day_of_week]||"—"} · ${esc(String(s.start_time||"").slice(0,5))} – ${esc(String(s.end_time||"").slice(0,5))}</div>
+   <small>Xona: ${esc(s.room||"—")}</small></div>`;
+ }
+
+ html+='</div>';
+
+ $("page").innerHTML=html+(data.length?"":empty("Jadval yo'q"));
+}
+
+async function createSchedule(form){
+ const f=new FormData(form);
+
+ const {error}=await db.from("lesson_schedule").insert({
+  course_id:f.get("course_id"),
+  teacher_id:user.id,
+  day_of_week:Number(f.get("day_of_week")),
+  start_time:f.get("start_time"),
+  end_time:f.get("end_time"),
+  room:f.get("room").trim()
+ });
+
+ if(error)throw error;
+
+ toast("Jadval saqlandi");
+ await go("schedule");
+}
+
+/* PROFIL */
+async function renderProfile(){
+ $("page").innerHTML=`
+  <div class="page-head"><div><h1>Profil</h1><p class="muted">Shaxsiy ma'lumotlar.</p></div></div>
+  <div class="card"><h3>${esc(profile.full_name)}</h3>
+   <p>Haqiqiy rol: <span class="badge gold">${esc(roleName(profile.role))}</span></p>
+   <p>Joriy ko'rinish: <span class="badge">${esc(roleName(activeRole))}</span></p>
+   <p>Login: <b>${esc(profile.username||user.email)}</b></p>
+   <form id="profileForm">
+    <div class="field"><label>Ism va familiya</label><input name="full_name" value="${esc(profile.full_name)}" required></div>
+    <button class="btn gold">Profilni saqlash</button>
+   </form>
+  </div>
+  ${profile.role==="admin"?`<div class="notice">Siz administrator hisobidasiz. O'quvchi yoki ustoz ko'rinishiga kirishingiz mumkin. Ota-ona ko'rinishi administrator uchun yopiq.</div>`:""}
+ `;
+}
+
+async function saveProfile(form){
+ const name=new FormData(form).get("full_name").trim();
+
+ const {error}=await db.from("profiles")
+  .update({full_name:name})
+  .eq("id",user.id);
+
+ if(error)throw error;
+
+ profile.full_name=name;
+ $("topName").textContent=name;
+ $("avatar").textContent=name.charAt(0).toUpperCase();
+
+ toast("Profil yangilandi");
+ await go("profile");
+}
+
+/* STATISTIKA */
+async function renderStatistics(){
+ const [g,a,c,t]=await Promise.all([
+  countRows("grades"),
+  countRows("attendance"),
+  countRows("courses"),
+  countRows("assignments")
+ ]);
+
+ $("page").innerHTML=`
+  <div class="page-head"><div><h1>Statistika</h1><p class="muted">Ta'lim ko'rsatkichlari.</p></div></div>
+  <div class="grid">
+   ${statCard("Baholar",g,"★")}
+   ${statCard("Davomat",a,"✓")}
+   ${statCard("Kurslar",c,"▣")}
+   ${statCard("Vazifalar",t,"✎")}
+  </div>
+  <div class="card"><h3>EduLife tariflari</h3><div class="two">
+   <div class="item"><strong>Oddiy xizmatlar</strong><div class="price">5 000 so'm</div></div>
+   <div class="item"><strong>Premium oylik</strong><div class="price">20 000 so'm</div></div>
+   <div class="item"><strong>Premium yillik</strong><div class="price">80 000 so'm</div></div>
+  </div><div class="notice">Tarif narxlari ko'rsatilmoqda. Haqiqiy to'lov tizimi hali ulanmagan.</div></div>`;
+}
+
+/* FORM HANDLERS */
+const handlers={
+ issueTeacherForm:issueAccount,
+ issueStudentForm:issueAccount,
+ issueParentForm:issueAccount,
+ courseForm:createCourse,
+ joinForm:joinCourse,
+ gradeForm:createGrade,
+ attendanceForm:createAttendance,
+ assignmentForm:createAssignment,
+ commentForm:createComment,
+ messageForm:createMessage,
+ scheduleForm:createSchedule,
+ profileForm:saveProfile
+};
+
+document.addEventListener("submit",async e=>{
+ const form=e.target;
+
+ if(form.classList.contains("submissionForm")){
+  e.preventDefault();
+  const button=form.querySelector("button");
+  if(button)button.disabled=true;
+
+  try{
+   await submitAssignment(form);
+  }catch(error){
+   fail(error);
+  }finally{
+   if(button)button.disabled=false;
+  }
+  return;
+ }
+
+ const handler=handlers[form.id];
+ if(!handler)return;
+
+ e.preventDefault();
+
+ const button=form.querySelector("button");
+ if(button)button.disabled=true;
+
+ try{
+  await handler(form);
+ }catch(error){
+  fail(error);
+ }finally{
+  if(button)button.disabled=false;
+ }
+});
+
+/* DASTURNI ISHGA TUSHIRISH */
+async function start(){
+ if(!window.supabase?.createClient){
+  toast("Supabase kutubxonasi yuklanmadi. Internetni tekshiring.");
+  return;
+ }
+
+ try{
+  db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
+   auth:{
+    persistSession:true,
+    autoRefreshToken:true,
+    detectSessionInUrl:false
+   }
+  });
+
+  $("authScreen").style.display="grid";
+  $("app").style.display="none";
+
+ }catch(e){
+  fail(e);
+ }
+}
+
+start();
+</script>
+</body>
+</html>
+
