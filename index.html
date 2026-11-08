@@ -6,6 +6,8 @@
 <meta name="theme-color" content="#080e1b">
 <title>EduLife</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://www.gstatic.com/firebasejs/13.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/13.0.0/firebase-messaging-compat.js"></script>
 <style>
 :root{--bg:#080e1b;--panel:#101b2d;--card:#142239;--line:#293a54;--blue:#3979f6;--gold:#e6c16e;--text:#f2f5fb;--muted:#9aa9bf;--green:#39c58b;--red:#ee6878}
 *{box-sizing:border-box}
@@ -154,8 +156,20 @@ th{color:var(--gold)}
 const SUPABASE_URL="https://nqunhvbiiukqfswsntpf.supabase.co";
 const SUPABASE_KEY="sb_publishable_M7rhjIqZ8rFNxUKurGb4pQ_A6MF0Get";
 
+const FIREBASE_CONFIG={
+ apiKey:"AIzaSyD1hJsCmk_7AfhnFA-jjwK4CA1pFnHA7Ks",
+ authDomain:"edulife-a774f.firebaseapp.com",
+ projectId:"edulife-a774f",
+ storageBucket:"edulife-a774f.firebasestorage.app",
+ messagingSenderId:"92661505128",
+ appId:"1:92661505128:web:7aeb0cbcb25bed59ceefdd"
+};
+const FIREBASE_VAPID_KEY="BOT0xJybOmDsY70AZb_uMbBQKweon9npPcmE9Ng8HwMBqN5JvXILBN9K2lrONI1hr92PHX4G6_6Djd3N3AStZwE";
+
 let db=null,user=null,profile=null;
 let selectedRole=null,activeRole=null,currentPage="dashboard",lastIssued=null;
+let firebaseMessaging=null;
+let firebaseForegroundListenerAdded=false;
 
 const $=id=>document.getElementById(id);
 
@@ -176,6 +190,92 @@ function toast(msg){
 function fail(e){
  console.error("EduLife xatoligi:",e);
  toast(e?.message||"Xatolik yuz berdi");
+}
+
+/* FIREBASE PUSH BILDIRISHNOMALARI */
+function pushPermissionText(){
+ if(!("Notification" in window))return "Bu brauzer bildirishnomalarni qo'llab-quvvatlamaydi.";
+ if(Notification.permission==="granted")return "Brauzer ruxsati berilgan. Bildirishnomalarni ro'yxatdan o'tkazish mumkin.";
+ if(Notification.permission==="denied")return "Brauzerda bildirishnomaga ruxsat rad etilgan. Sayt sozlamalaridan ruxsat bering.";
+ return "Telefon bildirishnomalarini yoqish uchun tugmani bosing.";
+}
+
+async function getFirebaseMessaging(){
+ if(!window.firebase||!firebase.messaging) {
+  throw new Error("Firebase kutubxonasi yuklanmadi. Internetni tekshiring.");
+ }
+
+ const supported=await firebase.messaging.isSupported();
+ if(!supported) {
+  throw new Error("Bu brauzer Firebase push bildirishnomalarini qo'llab-quvvatlamaydi. Android Chrome orqali urinib ko'ring.");
+ }
+
+ if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
+ firebaseMessaging=firebase.messaging();
+
+ if(!firebaseForegroundListenerAdded){
+  firebaseMessaging.onMessage(payload=>{
+   const title=payload?.notification?.title||payload?.data?.title||"EduLife";
+   const body=payload?.notification?.body||payload?.data?.body||"Yangi bildirishnoma keldi.";
+   toast("🔔 "+title+" — "+body);
+  });
+  firebaseForegroundListenerAdded=true;
+ }
+ return firebaseMessaging;
+}
+
+async function enablePushNotifications(){
+ const button=$("enablePushBtn");
+ const status=$("pushStatus");
+
+ if(button){
+  button.disabled=true;
+  button.textContent="Ulanmoqda...";
+ }
+
+ try{
+  if(!user||!db)throw new Error("Avval EduLife akkauntingizga kiring.");
+  if(!window.isSecureContext)throw new Error("Bildirishnomalar uchun sayt HTTPS manzilda ochilishi kerak.");
+  if(!("serviceWorker" in navigator))throw new Error("Bu brauzer Service Worker xizmatini qo'llab-quvvatlamaydi.");
+  if(!("Notification" in window))throw new Error("Bu brauzer Notification xizmatini qo'llab-quvvatlamaydi.");
+  if(Notification.permission==="denied")throw new Error("Bildirishnomaga ruxsat avval rad etilgan. Chrome sayt sozlamalaridan Notifications → Allow qiling.");
+
+  const permission=Notification.permission==="granted"
+   ?"granted"
+   :await Notification.requestPermission();
+
+  if(permission!=="granted")throw new Error("Bildirishnomaga ruxsat berilmadi.");
+
+  const registration=await navigator.serviceWorker.register("/firebase-messaging-sw.js",{scope:"/"});
+  await navigator.serviceWorker.ready;
+
+  const messaging=await getFirebaseMessaging();
+  const token=await messaging.getToken({
+   vapidKey:FIREBASE_VAPID_KEY,
+   serviceWorkerRegistration:registration
+  });
+
+  if(!token)throw new Error("Firebase qurilma tokenini qaytarmadi.");
+
+  const {error}=await db.from("push_subscriptions").upsert({
+   user_id:user.id,
+   token,
+   updated_at:new Date().toISOString()
+  },{onConflict:"user_id,token"});
+
+  if(error)throw new Error("Token Supabase'ga saqlanmadi: "+error.message);
+
+  if(status)status.textContent="✅ Telefon bildirishnomalari yoqildi va akkauntingizga bog'landi.";
+  toast("✅ EduLife bildirishnomalari yoqildi!");
+ }catch(e){
+  if(status)status.textContent=e?.message||"Bildirishnomani yoqishda xatolik yuz berdi.";
+  fail(e);
+ }finally{
+  if(button){
+   button.disabled=false;
+   button.textContent="🔔 Bildirishnomalarni yoqish";
+  }
+ }
 }
 
 function roleName(r){
@@ -394,6 +494,11 @@ async function enterApp(authUser,chosenRole){
 
 /* CHIQISH */
 async function logout(){
+ if(user?.id&&db){
+  const {error:pushError}=await db.from("push_subscriptions").delete().eq("user_id",user.id);
+  if(pushError)console.warn("Push obunasini o'chirish:",pushError.message);
+ }
+
  const {error}=await db.auth.signOut();
  if(error)console.error(error);
 
@@ -517,6 +622,13 @@ async function renderDashboard(){
   </div>
 
   ${family}
+
+  <div class="card">
+   <h3>🔔 Telefon bildirishnomalari</h3>
+   <p>Yangi xabarlar va EduLife yangiliklarini telefoningizda olish uchun bildirishnomalarni yoqing.</p>
+   <button class="btn gold" type="button" id="enablePushBtn" onclick="enablePushNotifications()">🔔 Bildirishnomalarni yoqish</button>
+   <p class="muted" id="pushStatus" style="font-size:13px;margin-bottom:0">${esc(pushPermissionText())}</p>
+  </div>
 
   <div class="two">
    <div class="card"><h3>EduLife</h3><p>Barcha o'quv jarayoni bir joyda.</p><button class="btn gold" onclick="go('courses')">Kurslarni ochish</button></div>
