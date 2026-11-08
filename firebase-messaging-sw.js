@@ -1,3 +1,12 @@
+self.addEventListener("notificationclick", function(event) {
+  event.notification.close();
+
+  const url = event.notification.data?.url ||
+    "https://ibodilloyevsunnatjon-hub.github.io/";
+
+  event.waitUntil(clients.openWindow(url));
+});
+
 importScripts(
   "https://www.gstatic.com/firebasejs/13.0.0/firebase-app-compat.js"
 );
@@ -16,25 +25,15 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-self.addEventListener("notificationclick", function(event) {
-  event.notification.close();
-
-  event.waitUntil(
-    clients.openWindow(
-      "https://ibodilloyevsunnatjon-hub.github.io/"
-    )
-  );
-});
-
 messaging.onBackgroundMessage(function(payload) {
   if (payload.notification) return;
 
   const data = payload.data || {};
 
-  self.registration.showNotification(
+  return self.registration.showNotification(
     data.title || "EduLife",
     {
-      body: data.body || "Sizga yangi bildirishnoma keldi",
+      body: data.body || "Sizga yangi bildirishnoma keldi.",
       data: {
         url: "https://ibodilloyevsunnatjon-hub.github.io/"
       }
