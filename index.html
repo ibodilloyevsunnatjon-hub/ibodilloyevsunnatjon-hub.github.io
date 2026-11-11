@@ -5,101 +5,740 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#080e1b">
 <title>EduLife</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://www.gstatic.com/firebasejs/13.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/13.0.0/firebase-messaging-compat.js"></script>
+
 <style>
-:root{--bg:#080e1b;--panel:#101b2d;--card:#142239;--line:#293a54;--blue:#3979f6;--gold:#e6c16e;--text:#f2f5fb;--muted:#9aa9bf;--green:#39c58b;--red:#ee6878}
+:root{
+ --bg:#080e1b;
+ --panel:#101b2d;
+ --card:#142239;
+ --line:#293a54;
+ --blue:#3979f6;
+ --gold:#e6c16e;
+ --text:#f2f5fb;
+ --muted:#9aa9bf;
+ --green:#39c58b;
+ --red:#ee6878;
+ --input-bg:#0a1424;
+ --sidebar-bg:#0d1728;
+ --topbar-bg:#0d1728;
+ --item-bg:#0d192b;
+ --nav-text:#b7c4d7;
+}
+
+:root[data-theme="light"]{
+ color-scheme:light;
+ --bg:#f2f5fb;
+ --panel:#ffffff;
+ --card:#ffffff;
+ --line:#dce3ef;
+ --blue:#2868db;
+ --gold:#a36b00;
+ --text:#19263a;
+ --muted:#64748b;
+ --green:#16875b;
+ --red:#cf4055;
+ --input-bg:#ffffff;
+ --sidebar-bg:#ffffff;
+ --topbar-bg:#ffffff;
+ --item-bg:#f7f9fd;
+ --nav-text:#40516b;
+}
+
+:root[data-theme="dark"]{color-scheme:dark}
+
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
+
+body{
+ margin:0;
+ background:var(--bg);
+ color:var(--text);
+ font-family:Arial,sans-serif;
+ transition:background .2s,color .2s;
+}
+
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
 .hidden{display:none!important}
-#authScreen{min-height:100vh;display:grid;place-items:center;padding:18px;background:radial-gradient(circle at top,#20385c,var(--bg) 65%)}
-.auth-card{width:100%;max-width:470px;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:25px;box-shadow:0 20px 70px #0008}
-.logo{font-size:30px;font-weight:800}.logo span{color:var(--gold)}
-.auth-sub{color:var(--muted);line-height:1.5;margin:10px 0 24px}
+
+#authScreen{
+ min-height:100vh;
+ display:grid;
+ place-items:center;
+ padding:18px;
+ background:radial-gradient(circle at top,#20385c,var(--bg) 65%);
+}
+
+.auth-card{
+ width:100%;
+ max-width:470px;
+ background:var(--panel);
+ border:1px solid var(--line);
+ border-radius:22px;
+ padding:25px;
+ box-shadow:0 20px 70px #0008;
+}
+
+.logo{font-size:30px;font-weight:800}
+.logo span{color:var(--gold)}
+
+.auth-brand-row{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:10px;
+}
+
+.auth-sub{
+ color:var(--muted);
+ line-height:1.5;
+ margin:10px 0 24px;
+}
+
 .muted{color:var(--muted)}
 .field{margin:13px 0}
-label{display:block;margin-bottom:7px;font-size:13px;color:#c5d1e1}
-input,select,textarea{width:100%;padding:12px;background:#0a1424;color:var(--text);border:1px solid var(--line);border-radius:10px;outline:none}
+
+label{
+ display:block;
+ margin-bottom:7px;
+ font-size:13px;
+ color:var(--muted);
+}
+
+input,select,textarea{
+ width:100%;
+ padding:12px;
+ background:var(--input-bg);
+ color:var(--text);
+ border:1px solid var(--line);
+ border-radius:10px;
+ outline:none;
+}
+
 input:focus,select:focus,textarea:focus{border-color:var(--blue)}
 textarea{min-height:85px;resize:vertical}
-.btn{padding:12px 16px;border:0;border-radius:10px;background:var(--blue);color:white;font-weight:700}
+
+.btn{
+ padding:12px 16px;
+ border:0;
+ border-radius:10px;
+ background:var(--blue);
+ color:white;
+ font-weight:700;
+}
+
 .btn.gold{background:var(--gold);color:#172033}
-.btn.dark{background:#283a55}
-.btn.red{background:#923746}
+.btn.dark{background:#283a55;color:white}
+.btn.red{background:#923746;color:white}
 .btn:disabled{opacity:.6;cursor:wait}
 .full{width:100%}
-.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:18px 0}
-.role-choice{min-height:105px;background:#142943;border:1px solid var(--line);border-radius:14px;color:white;padding:14px;text-align:center}
-.role-choice .ico{font-size:27px;display:block;margin-bottom:9px}
-.role-choice.selected{border:2px solid var(--gold);background:#24354b}
-.small-btn{background:none;border:0;color:var(--gold);padding:10px 0}
-.sidebar{width:250px;position:fixed;inset:0 auto 0 0;background:#0d1728;border-right:1px solid var(--line);padding:20px 14px;overflow:auto;z-index:10}
-.brand{padding:4px 12px 22px;border-bottom:1px solid var(--line);margin-bottom:14px}
-.brand small{display:block;color:var(--muted);font-size:10px;letter-spacing:2px;margin-top:5px}
-.nav{display:flex;flex-direction:column;gap:5px}
-.nav button{background:none;border:0;color:#b7c4d7;text-align:left;padding:12px;border-radius:10px}
-.nav button.active,.nav button:hover{background:#1a2d49;color:white}
+
+.role-grid{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:11px;
+ margin:18px 0;
+}
+
+.role-choice{
+ min-height:105px;
+ background:#142943;
+ border:1px solid var(--line);
+ border-radius:14px;
+ color:white;
+ padding:14px;
+ text-align:center;
+}
+
+.role-choice .ico{
+ font-size:27px;
+ display:block;
+ margin-bottom:9px;
+}
+
+.role-choice.selected{
+ border:2px solid var(--gold);
+ background:#24354b;
+}
+
+.small-btn{
+ background:none;
+ border:0;
+ color:var(--gold);
+ padding:10px 0;
+}
+
+.theme-toggle{
+ display:inline-flex;
+ align-items:center;
+ justify-content:center;
+ gap:6px;
+ padding:9px 12px;
+ background:var(--card);
+ color:var(--text);
+ border:1px solid var(--line);
+ border-radius:10px;
+ font-size:12px;
+ font-weight:700;
+ white-space:nowrap;
+}
+
+.sidebar{
+ width:250px;
+ position:fixed;
+ inset:0 auto 0 0;
+ background:var(--sidebar-bg);
+ border-right:1px solid var(--line);
+ padding:20px 14px;
+ overflow:auto;
+ z-index:10;
+}
+
+.brand{
+ padding:4px 12px 22px;
+ border-bottom:1px solid var(--line);
+ margin-bottom:14px;
+}
+
+.brand small{
+ display:block;
+ color:var(--muted);
+ font-size:10px;
+ letter-spacing:2px;
+ margin-top:5px;
+}
+
+.nav{
+ display:flex;
+ flex-direction:column;
+ gap:5px;
+}
+
+.nav button{
+ background:none;
+ border:0;
+ color:var(--nav-text);
+ text-align:left;
+ padding:12px;
+ border-radius:10px;
+}
+
+.nav button.active,.nav button:hover{
+ background:#1a2d49;
+ color:white;
+}
+
 .nav button.active{border-left:3px solid var(--gold)}
+
 #app{display:none;min-height:100vh}
 .main{margin-left:250px;min-height:100vh}
-.topbar{height:70px;position:sticky;top:0;z-index:5;background:#0d1728;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 27px}
-.top-left{display:flex;align-items:center;gap:12px}
+
+.topbar{
+ height:70px;
+ position:sticky;
+ top:0;
+ z-index:5;
+ background:var(--topbar-bg);
+ border-bottom:1px solid var(--line);
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ padding:0 27px;
+}
+
+.top-left{
+ display:flex;
+ align-items:center;
+ gap:12px;
+}
+
+.top-actions{
+ display:flex;
+ align-items:center;
+ gap:12px;
+}
+
 .topbar small{color:var(--muted)}
-.avatar{width:39px;height:39px;border-radius:50%;background:var(--gold);color:#15213a;display:grid;place-items:center;font-weight:bold}
-.menu-btn{display:none;background:none;border:1px solid var(--line);color:white;border-radius:8px;padding:8px 11px}
-.content{max-width:1250px;margin:auto;padding:27px}
-.page-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
-.page-head h1{font-size:25px;margin:0 0 6px}
-.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
-.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:17px;margin-bottom:15px;min-width:0}
-.card h3{font-size:16px;margin:0 0 12px}
-.card p{line-height:1.5;color:var(--muted)}
-.stat{font-size:29px;color:var(--gold);font-weight:800;margin:10px 0}
-.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+
+.avatar{
+ width:39px;
+ height:39px;
+ border-radius:50%;
+ background:var(--gold);
+ color:#15213a;
+ display:grid;
+ place-items:center;
+ font-weight:bold;
+ flex-shrink:0;
+}
+
+.menu-btn{
+ display:none;
+ background:none;
+ border:1px solid var(--line);
+ color:var(--text);
+ border-radius:8px;
+ padding:8px 11px;
+}
+
+.content{
+ max-width:1250px;
+ margin:auto;
+ padding:27px;
+}
+
+.page-head{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:12px;
+ flex-wrap:wrap;
+ margin-bottom:20px;
+}
+
+.page-head h1{
+ font-size:25px;
+ margin:0 0 6px;
+}
+
+.grid{
+ display:grid;
+ grid-template-columns:repeat(4,minmax(0,1fr));
+ gap:14px;
+}
+
+.two{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:14px;
+}
+
+.card{
+ background:var(--card);
+ border:1px solid var(--line);
+ border-radius:15px;
+ padding:17px;
+ margin-bottom:15px;
+ min-width:0;
+}
+
+.card h3{
+ font-size:16px;
+ margin:0 0 12px;
+}
+
+.card p{
+ line-height:1.5;
+ color:var(--muted);
+}
+
+.stat{
+ font-size:29px;
+ color:var(--gold);
+ font-weight:800;
+ margin:10px 0;
+}
+
+.form-grid{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:12px;
+}
+
 .wide{grid-column:1/-1}
-.list{display:flex;flex-direction:column;gap:10px}
-.item{background:#0d192b;border:1px solid var(--line);border-radius:11px;padding:13px;overflow-wrap:anywhere}
-.item strong{display:block;margin-bottom:7px}
+
+.list{
+ display:flex;
+ flex-direction:column;
+ gap:10px;
+}
+
+.item{
+ background:var(--item-bg);
+ border:1px solid var(--line);
+ border-radius:11px;
+ padding:13px;
+ overflow-wrap:anywhere;
+}
+
+.item strong{
+ display:block;
+ margin-bottom:7px;
+}
+
 .item small{color:var(--muted)}
-.badge{display:inline-block;padding:5px 9px;border-radius:20px;background:#253e62;color:#d4e3ff;font-size:11px}
+
+.badge{
+ display:inline-block;
+ padding:5px 9px;
+ border-radius:20px;
+ background:#253e62;
+ color:#d4e3ff;
+ font-size:11px;
+}
+
 .badge.gold{background:#4b402b;color:var(--gold)}
 .badge.green{background:#164b3b;color:#83e4b9}
 .badge.red{background:#512b37;color:#ffabb5}
-.empty{border:1px dashed var(--line);border-radius:12px;text-align:center;padding:24px;color:var(--muted)}
-.notice{padding:12px 14px;background:#2b2519;border:1px solid #705b30;color:#f0d58e;border-radius:10px;line-height:1.5;margin:12px 0;overflow-wrap:anywhere}
-.table-wrap{overflow:auto}
-table{border-collapse:collapse;width:100%;min-width:450px}
-td,th{text-align:left;padding:11px;border-bottom:1px solid var(--line);font-size:13px}
-th{color:var(--gold)}
-.price{color:var(--gold);font-size:25px;font-weight:800;margin:7px 0}
-#toast{display:none;position:fixed;z-index:30;bottom:20px;left:50%;transform:translateX(-50%);padding:12px 17px;background:#223650;border:1px solid #4a668e;border-radius:12px;max-width:90%;width:max-content;box-shadow:0 8px 30px #0009;line-height:1.5;overflow-wrap:anywhere}
-@media(max-width:950px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:700px){
-.sidebar{transform:translateX(-105%);transition:.25s;width:260px;box-shadow:12px 0 35px #0009}
-.sidebar.open{transform:translateX(0)}
-.main{margin-left:0}.menu-btn{display:block}
-.topbar{height:62px;padding:0 13px}
-.content{padding:18px 13px}
-.two{grid-template-columns:1fr}
-.card{padding:14px}
-.page-head h1{font-size:22px}
+
+.empty{
+ border:1px dashed var(--line);
+ border-radius:12px;
+ text-align:center;
+ padding:24px;
+ color:var(--muted);
 }
-@media(max-width:390px){.grid,.form-grid{grid-template-columns:1fr}.wide{grid-column:auto}}
+
+.notice{
+ padding:12px 14px;
+ background:#2b2519;
+ border:1px solid #705b30;
+ color:#f0d58e;
+ border-radius:10px;
+ line-height:1.5;
+ margin:12px 0;
+ overflow-wrap:anywhere;
+}
+
+.table-wrap{overflow:auto}
+
+table{
+ border-collapse:collapse;
+ width:100%;
+ min-width:450px;
+}
+
+td,th{
+ text-align:left;
+ padding:11px;
+ border-bottom:1px solid var(--line);
+ font-size:13px;
+ vertical-align:top;
+}
+
+th{color:var(--gold)}
+
+.price{
+ color:var(--gold);
+ font-size:25px;
+ font-weight:800;
+ margin:7px 0;
+}
+
+#toast{
+ display:none;
+ position:fixed;
+ z-index:30;
+ bottom:20px;
+ left:50%;
+ transform:translateX(-50%);
+ padding:12px 17px;
+ background:#223650;
+ color:white;
+ border:1px solid #4a668e;
+ border-radius:12px;
+ max-width:90%;
+ width:max-content;
+ box-shadow:0 8px 30px #0009;
+ line-height:1.5;
+ overflow-wrap:anywhere;
+}
+
+/* LIGHT MODE */
+:root[data-theme="light"] #authScreen{
+ background:radial-gradient(circle at top,#dceaff,var(--bg) 65%);
+}
+
+:root[data-theme="light"] .auth-card{
+ box-shadow:0 15px 50px #263b5b18;
+}
+
+:root[data-theme="light"] .role-choice{
+ background:#f1f5fb;
+ color:#20304a;
+}
+
+:root[data-theme="light"] .role-choice.selected{
+ background:#fff6df;
+ border-color:var(--gold);
+}
+
+:root[data-theme="light"] .nav button.active,
+:root[data-theme="light"] .nav button:hover{
+ background:#e9effa;
+ color:#19345f;
+}
+
+:root[data-theme="light"] .notice{
+ background:#fff6df;
+ border-color:#e5c778;
+ color:#76520c;
+}
+
+:root[data-theme="light"] .badge{
+ background:#e8effb;
+ color:#234d91;
+}
+
+:root[data-theme="light"] .badge.gold{
+ background:#fff3d5;
+ color:#825600;
+}
+
+:root[data-theme="light"] .badge.green{
+ background:#dcf7e9;
+ color:#146c49;
+}
+
+:root[data-theme="light"] .badge.red{
+ background:#ffe6e9;
+ color:#a52d42;
+}
+
+:root[data-theme="light"] #toast{
+ background:#fff;
+ color:#19263a;
+ border-color:#dce3ef;
+}
+
+:root[data-theme="light"] .btn.dark{
+ background:#e1e8f2;
+ color:#1b2d48;
+}
+
+:root[data-theme="light"] .small-btn{color:#946000}
+
+/* YUTUQLAR */
+.achievement-grid{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:14px;
+}
+
+.achievement-card{
+ background:var(--item-bg);
+ border:1px solid var(--line);
+ border-radius:15px;
+ padding:16px;
+ min-width:0;
+}
+
+.achievement-card.locked{opacity:.65}
+
+.achievement-icon{
+ font-size:38px;
+ margin-bottom:10px;
+}
+
+.achievement-card h3{
+ margin:0 0 7px;
+ font-size:16px;
+}
+
+.achievement-card p{
+ color:var(--muted);
+ font-size:13px;
+ line-height:1.5;
+}
+
+.achievement-progress{
+ height:9px;
+ background:var(--line);
+ border-radius:20px;
+ overflow:hidden;
+ margin:12px 0 7px;
+}
+
+.achievement-progress-fill{
+ height:100%;
+ background:var(--blue);
+ border-radius:20px;
+}
+
+.achievement-status{
+ font-size:12px;
+ font-weight:bold;
+ color:var(--gold);
+}
+
+.achievement-summary{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:12px;
+}
+
+/* STATISTIKA */
+.stats-overview{
+ display:grid;
+ grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:12px;
+ margin-bottom:16px;
+}
+
+.stats-box{
+ background:var(--item-bg);
+ border:1px solid var(--line);
+ border-radius:13px;
+ padding:15px;
+ min-width:0;
+}
+
+.stats-box .number{
+ font-size:27px;
+ font-weight:800;
+ color:var(--gold);
+ margin-top:9px;
+ overflow-wrap:anywhere;
+}
+
+.stats-box small{color:var(--muted)}
+
+.stats-course{
+ background:var(--item-bg);
+ border:1px solid var(--line);
+ border-radius:13px;
+ padding:16px;
+ margin-bottom:12px;
+}
+
+.stats-course-title{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ flex-wrap:wrap;
+ gap:10px;
+ margin-bottom:13px;
+}
+
+.stats-course-title h3{
+ margin:0;
+ font-size:16px;
+}
+
+.stats-row{
+ display:grid;
+ grid-template-columns:75px minmax(0,1fr) 45px;
+ gap:9px;
+ align-items:center;
+ margin:12px 0;
+ font-size:12px;
+}
+
+.stats-track{
+ background:var(--line);
+ height:12px;
+ border-radius:20px;
+ overflow:hidden;
+}
+
+.stats-fill{
+ height:100%;
+ border-radius:20px;
+ background:var(--blue);
+}
+
+.stats-fill.old{background:#8492a8}
+
+.stats-change{
+ padding:7px 10px;
+ border-radius:8px;
+ display:inline-block;
+ font-size:12px;
+ font-weight:bold;
+}
+
+.stats-change.up{background:#164b3b;color:#83e4b9}
+.stats-change.down{background:#512b37;color:#ffabb5}
+.stats-change.same{background:#253e62;color:#d4e3ff}
+
+.stats-hint{
+ font-size:12px;
+ color:var(--muted);
+ line-height:1.6;
+}
+
+.stats-section-title{
+ margin:22px 0 13px;
+ font-size:18px;
+}
+
+.stats-empty{
+ border:1px dashed var(--line);
+ border-radius:12px;
+ padding:18px;
+ color:var(--muted);
+ text-align:center;
+}
+
+/* PDF */
+@media(max-width:950px){
+ .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+@media(max-width:700px){
+ .sidebar{
+  transform:translateX(-105%);
+  transition:.25s;
+  width:260px;
+  box-shadow:12px 0 35px #0009;
+ }
+
+ .sidebar.open{transform:translateX(0)}
+ .main{margin-left:0}
+ .menu-btn{display:block}
+
+ .topbar{
+  height:62px;
+  padding:0 13px;
+ }
+
+ .content{padding:18px 13px}
+ .two{grid-template-columns:1fr}
+ .card{padding:14px}
+ .page-head h1{font-size:22px}
+ .theme-toggle{padding:8px;font-size:11px}
+ .top-actions{gap:7px}
+}
+
+@media(max-width:600px){
+ .stats-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .stats-row{grid-template-columns:60px minmax(0,1fr) 40px;gap:6px}
+}
+
+@media(max-width:450px){
+ .achievement-grid{grid-template-columns:1fr}
+}
+
+@media(max-width:390px){
+ .grid,.form-grid{grid-template-columns:1fr}
+ .wide{grid-column:auto}
+ .topbar{padding:0 9px}
+ .top-left{gap:7px}
+ .topbar strong{font-size:14px}
+ .theme-toggle{font-size:10px;padding:7px}
+ .avatar{width:34px;height:34px}
+}
 </style>
 </head>
+
 <body>
 
 <div id="authScreen">
  <div class="auth-card">
-  <div class="logo">Edu<span>Life</span> ✦</div>
+
+  <div class="auth-brand-row">
+   <div class="logo">Edu<span>Life</span> ✦</div>
+   <button class="theme-toggle" type="button" onclick="toggleTheme()">☀️ Yorug‘ rejim</button>
+  </div>
+
   <p class="auth-sub">Elektron kundalik — ta'lim, baholar va natijalar bir joyda.</p>
 
   <div id="rolePicker">
    <h3>Kim sifatida kirasiz?</h3>
+
    <div class="role-grid">
     <button type="button" class="role-choice" data-role="student"><span class="ico">🎓</span>O'quvchi</button>
     <button type="button" class="role-choice" data-role="teacher"><span class="ico">📚</span>Ustoz</button>
@@ -110,49 +749,76 @@ th{color:var(--gold)}
 
   <div id="loginPanel" class="hidden">
    <span class="badge gold" id="selectedRoleLabel"></span>
+
    <h3 style="margin-top:15px">Tizimga kirish</h3>
+
    <form id="loginForm">
     <div class="field">
      <label>Login</label>
      <input id="loginName" required autocomplete="username" placeholder="Sizga berilgan login">
     </div>
+
     <div class="field">
      <label>Parol</label>
      <input id="loginPassword" type="password" required autocomplete="current-password" placeholder="Parolingiz">
     </div>
+
     <button type="submit" class="btn gold full" id="loginButton">Kirish</button>
    </form>
+
    <button class="small-btn" type="button" onclick="backToRoles()">← Rollarni tanlashga qaytish</button>
    <p class="muted" style="font-size:12px" id="loginHint"></p>
   </div>
+
  </div>
 </div>
 
 <div id="app">
  <aside class="sidebar" id="sidebar">
+
   <div class="brand">
    <div class="logo">Edu<span>Life</span> ✦</div>
    <small>SMART EDUCATION PLATFORM</small>
   </div>
+
   <nav class="nav" id="nav"></nav>
+
   <div style="border-top:1px solid var(--line);margin-top:18px;padding-top:15px">
    <button class="btn dark full" type="button" onclick="logout()">Chiqish ⟵</button>
   </div>
+
  </aside>
+
  <main class="main">
+
   <header class="topbar">
+
    <div class="top-left">
     <button class="menu-btn" type="button" onclick="toggleMenu()">☰</button>
-    <div><strong id="topName">EduLife</strong><br><small id="topRole">Yuklanmoqda...</small></div>
+
+    <div>
+     <strong id="topName">EduLife</strong><br>
+     <small id="topRole">Yuklanmoqda...</small>
+    </div>
    </div>
-   <div class="avatar" id="avatar">E</div>
+
+   <div class="top-actions">
+    <button class="theme-toggle" type="button" onclick="toggleTheme()">☀️ Yorug‘ rejim</button>
+    <div class="avatar" id="avatar">E</div>
+   </div>
+
   </header>
+
   <section class="content" id="page"></section>
+
  </main>
 </div>
+
 <div id="toast"></div>
 
 <script>
+/* SOZLAMALAR */
+
 const SUPABASE_URL="https://nqunhvbiiukqfswsntpf.supabase.co";
 const SUPABASE_KEY="sb_publishable_M7rhjIqZ8rFNxUKurGb4pQ_A6MF0Get";
 
@@ -164,7 +830,8 @@ const FIREBASE_CONFIG={
  messagingSenderId:"92661505128",
  appId:"1:92661505128:web:7aeb0cbcb25bed59ceefdd"
 };
-const FIREBASE_VAPID_KEY="BOT0xJybOmDsY70AZb_uMbBQKweon9npPcmE9Ng8HwMBqN5JvXILBN9K2lrONI1hr92PHX4G6_6Djd3N3AStZwE";
+
+const FIREBASE_VAPID_KEY="BOT0xJybOmDsY70AZb_uMbBQKweon9npPcmE9Ng8HwMBqN5JvXILBN9K2lrONI1hr92PHX4G6_6DjdN3N3AStZwE";
 
 let db=null,user=null,profile=null;
 let selectedRole=null,activeRole=null,currentPage="dashboard",lastIssued=null;
@@ -173,58 +840,273 @@ let firebaseForegroundListenerAdded=false;
 
 const $=id=>document.getElementById(id);
 
+/* DARK MODE */
+
+function applyTheme(theme){
+
+ const selected=theme==="light"?"light":"dark";
+
+ document.documentElement.setAttribute("data-theme",selected);
+
+ try{
+  localStorage.setItem("edulife_theme",selected);
+ }catch(e){
+  console.warn("Rejimni saqlab bo'lmadi:",e);
+ }
+
+ document.querySelectorAll(".theme-toggle").forEach(button=>{
+  button.textContent=selected==="dark"
+   ?"☀️ Yorug‘ rejim"
+   :"🌙 Qorong‘i rejim";
+ });
+
+ const meta=document.querySelector('meta[name="theme-color"]');
+
+ if(meta){
+  meta.content=selected==="dark"?"#080e1b":"#f2f5fb";
+ }
+}
+
+function toggleTheme(){
+
+ const current=document.documentElement.getAttribute("data-theme")||"dark";
+ const next=current==="dark"?"light":"dark";
+
+ applyTheme(next);
+
+ toast(next==="light"
+  ?"☀️ Yorug‘ rejim yoqildi"
+  :"🌙 Qorong‘i rejim yoqildi"
+ );
+}
+
+function loadTheme(){
+
+ try{
+  const saved=localStorage.getItem("edulife_theme");
+  applyTheme(saved||"dark");
+ }catch(e){
+  applyTheme("dark");
+ }
+
+}
+
+loadTheme();
+
+/* YORDAMCHI FUNKSIYALAR */
+
 function esc(v){
+
  return String(v??"").replace(/[&<>"']/g,c=>({
-  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  "&":"&amp;",
+  "<":"&lt;",
+  ">":"&gt;",
+  '"':"&quot;",
+  "'":"&#39;"
  }[c]));
+
 }
 
 function toast(msg){
+
  const el=$("toast");
+
  el.textContent=msg;
  el.style.display="block";
+
  clearTimeout(window.toastTimer);
- window.toastTimer=setTimeout(()=>el.style.display="none",10000);
+
+ window.toastTimer=setTimeout(
+  ()=>el.style.display="none",
+  10000
+ );
+
 }
 
 function fail(e){
+
  console.error("EduLife xatoligi:",e);
  toast(e?.message||"Xatolik yuz berdi");
+
 }
 
-/* FIREBASE PUSH BILDIRISHNOMALARI */
+function roleName(r){
+
+ return ({
+  student:"O'quvchi",
+  teacher:"Ustoz",
+  parent:"Ota-ona",
+  admin:"Administrator"
+ })[r]||r||"Foydalanuvchi";
+
+}
+
+function dateText(v){
+
+ return v
+  ?new Date(v).toLocaleString("uz-UZ",{dateStyle:"medium",timeStyle:"short"})
+  :"—";
+
+}
+
+function empty(v="Hozircha ma'lumot yo'q"){
+
+ return `<div class="empty">${esc(v)}</div>`;
+
+}
+
+function makeNameMap(people){
+
+ return Object.fromEntries((people||[]).map(p=>[
+  p.id,
+  p.full_name||roleName(p.role)
+ ]));
+
+}
+
+function personName(id,map){
+
+ if(!id)return "—";
+
+ return map?.[id]||"Foydalanuvchi";
+
+}
+
+function makeCourseMap(courses){
+
+ return Object.fromEntries((courses||[]).map(c=>[
+  c.id,c.title||"Kurs"
+ ]));
+
+}
+
+function courseName(id,map){
+
+ if(!id)return "—";
+
+ return map?.[id]||"Kurs nomi topilmadi";
+
+}
+
+function isTeacher(){
+
+ return activeRole==="teacher"||activeRole==="admin";
+
+}
+
+function isAdmin(){
+
+ return activeRole==="admin";
+
+}
+
+async function rows(table,columns="*"){
+
+ const {data,error}=await db.from(table).select(columns);
+
+ if(error)throw error;
+
+ return data||[];
+
+}
+
+async function countRows(table){
+
+ const {count,error}=await db
+  .from(table)
+  .select("*",{count:"exact",head:true});
+
+ if(error)throw error;
+
+ return count||0;
+
+}
+
+function statCard(title,value,icon){
+
+ return `<div class="card">
+  <div class="muted">${icon} ${esc(title)}</div>
+  <div class="stat">${value}</div>
+ </div>`;
+
+}
+
+function field(name,label,placeholder="",type="text"){
+
+ return `<div>
+  <label>${esc(label)}</label>
+  <input name="${esc(name)}" type="${esc(type)}" placeholder="${esc(placeholder)}" required>
+ </div>`;
+
+}
+
+function selectField(name,label,items,placeholder){
+
+ return `<div>
+  <label>${esc(label)}</label>
+  <select name="${esc(name)}" required>
+   <option value="">${esc(placeholder||"Tanlang")}</option>
+   ${items.map(x=>`<option value="${esc(x.value)}">${esc(x.label)}</option>`).join("")}
+  </select>
+ </div>`;
+
+}
+
+/* FIREBASE PUSH */
+
 function pushPermissionText(){
- if(!("Notification" in window))return "Bu brauzer bildirishnomalarni qo'llab-quvvatlamaydi.";
- if(Notification.permission==="granted")return "Brauzer ruxsati berilgan. Bildirishnomalarni ro'yxatdan o'tkazish mumkin.";
- if(Notification.permission==="denied")return "Brauzerda bildirishnomaga ruxsat rad etilgan. Sayt sozlamalaridan ruxsat bering.";
+
+ if(!("Notification" in window))
+  return "Bu brauzer bildirishnomalarni qo'llab-quvvatlamaydi.";
+
+ if(Notification.permission==="granted")
+  return "Brauzer ruxsati berilgan. Bildirishnomalarni ro'yxatdan o'tkazish mumkin.";
+
+ if(Notification.permission==="denied")
+  return "Brauzerda bildirishnomaga ruxsat rad etilgan. Sayt sozlamalaridan ruxsat bering.";
+
  return "Telefon bildirishnomalarini yoqish uchun tugmani bosing.";
+
 }
 
 async function getFirebaseMessaging(){
- if(!window.firebase||!firebase.messaging) {
+
+ if(!window.firebase||!firebase.messaging){
   throw new Error("Firebase kutubxonasi yuklanmadi. Internetni tekshiring.");
  }
 
  const supported=await firebase.messaging.isSupported();
- if(!supported) {
-  throw new Error("Bu brauzer Firebase push bildirishnomalarini qo'llab-quvvatlamaydi. Android Chrome orqali urinib ko'ring.");
+
+ if(!supported){
+  throw new Error("Bu brauzer Firebase push bildirishnomalarini qo'llab-quvvatlamaydi.");
  }
 
- if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
+ if(!firebase.apps.length){
+  firebase.initializeApp(FIREBASE_CONFIG);
+ }
+
  firebaseMessaging=firebase.messaging();
 
  if(!firebaseForegroundListenerAdded){
+
   firebaseMessaging.onMessage(payload=>{
+
    const title=payload?.notification?.title||payload?.data?.title||"EduLife";
    const body=payload?.notification?.body||payload?.data?.body||"Yangi bildirishnoma keldi.";
+
    toast("🔔 "+title+" — "+body);
+
   });
+
   firebaseForegroundListenerAdded=true;
  }
+
  return firebaseMessaging;
+
 }
 
 async function enablePushNotifications(){
+
  const button=$("enablePushBtn");
  const status=$("pushStatus");
 
@@ -234,22 +1116,37 @@ async function enablePushNotifications(){
  }
 
  try{
+
   if(!user||!db)throw new Error("Avval EduLife akkauntingizga kiring.");
-  if(!window.isSecureContext)throw new Error("Bildirishnomalar uchun sayt HTTPS manzilda ochilishi kerak.");
-  if(!("serviceWorker" in navigator))throw new Error("Bu brauzer Service Worker xizmatini qo'llab-quvvatlamaydi.");
-  if(!("Notification" in window))throw new Error("Bu brauzer Notification xizmatini qo'llab-quvvatlamaydi.");
-  if(Notification.permission==="denied")throw new Error("Bildirishnomaga ruxsat avval rad etilgan. Chrome sayt sozlamalaridan Notifications → Allow qiling.");
+
+  if(!window.isSecureContext)
+   throw new Error("Bildirishnomalar uchun sayt HTTPS manzilda ochilishi kerak.");
+
+  if(!("serviceWorker" in navigator))
+   throw new Error("Bu brauzer Service Worker xizmatini qo'llab-quvvatlamaydi.");
+
+  if(!("Notification" in window))
+   throw new Error("Bu brauzer Notification xizmatini qo'llab-quvvatlamaydi.");
+
+  if(Notification.permission==="denied")
+   throw new Error("Bildirishnomaga ruxsat avval rad etilgan. Chrome sayt sozlamalaridan Notifications → Allow qiling.");
 
   const permission=Notification.permission==="granted"
    ?"granted"
    :await Notification.requestPermission();
 
-  if(permission!=="granted")throw new Error("Bildirishnomaga ruxsat berilmadi.");
+  if(permission!=="granted")
+   throw new Error("Bildirishnomaga ruxsat berilmadi.");
 
-  const registration=await navigator.serviceWorker.register("/firebase-messaging-sw.js",{scope:"/"});
+  const registration=await navigator.serviceWorker.register(
+   "/firebase-messaging-sw.js",
+   {scope:"/"}
+  );
+
   await navigator.serviceWorker.ready;
 
   const messaging=await getFirebaseMessaging();
+
   const token=await messaging.getToken({
    vapidKey:FIREBASE_VAPID_KEY,
    serviceWorkerRegistration:registration
@@ -265,94 +1162,41 @@ async function enablePushNotifications(){
 
   if(error)throw new Error("Token Supabase'ga saqlanmadi: "+error.message);
 
-  if(status)status.textContent="✅ Telefon bildirishnomalari yoqildi va akkauntingizga bog'landi.";
+  if(status){
+   status.textContent="✅ Telefon bildirishnomalari yoqildi va akkauntingizga bog'landi.";
+  }
+
   toast("✅ EduLife bildirishnomalari yoqildi!");
+
  }catch(e){
-  if(status)status.textContent=e?.message||"Bildirishnomani yoqishda xatolik yuz berdi.";
+
+  if(status){
+   status.textContent=e?.message||"Bildirishnomani yoqishda xatolik yuz berdi.";
+  }
+
   fail(e);
+
  }finally{
+
   if(button){
    button.disabled=false;
    button.textContent="🔔 Bildirishnomalarni yoqish";
   }
+
  }
-}
 
-function roleName(r){
- return ({student:"O'quvchi",teacher:"Ustoz",parent:"Ota-ona",admin:"Administrator"})[r]||r||"Foydalanuvchi";
-}
-
-function dateText(v){
- return v?new Date(v).toLocaleString("uz-UZ",{dateStyle:"medium",timeStyle:"short"}):"—";
-}
-
-function empty(v="Hozircha ma'lumot yo'q"){
- return `<div class="empty">${esc(v)}</div>`;
-}
-
-/* ID O'RNIGA ISM CHIQARISH */
-function makeNameMap(people){
- return Object.fromEntries((people||[]).map(p=>[
-  p.id,
-  p.full_name||roleName(p.role)
- ]));
-}
-
-function personName(id,map){
- if(!id)return "—";
- return map?.[id]||"Foydalanuvchi";
-}
-
-function makeCourseMap(courses){
- return Object.fromEntries((courses||[]).map(c=>[c.id,c.title||"Kurs"]));
-}
-
-function courseName(id,map){
- if(!id)return "—";
- return map?.[id]||"Kurs nomi topilmadi";
-}
-
-function isTeacher(){
- return activeRole==="teacher"||activeRole==="admin";
-}
-
-function isAdmin(){
- return activeRole==="admin";
-}
-
-async function rows(table,columns="*"){
- const {data,error}=await db.from(table).select(columns);
- if(error)throw error;
- return data||[];
-}
-
-async function countRows(table){
- const {count,error}=await db.from(table).select("*",{count:"exact",head:true});
- if(error)throw error;
- return count||0;
-}
-
-function statCard(title,value,icon){
- return `<div class="card"><div class="muted">${icon} ${esc(title)}</div><div class="stat">${value}</div></div>`;
-}
-
-function field(name,label,placeholder="",type="text"){
- return `<div><label>${esc(label)}</label><input name="${esc(name)}" type="${esc(type)}" placeholder="${esc(placeholder)}" required></div>`;
-}
-
-function selectField(name,label,items,placeholder){
- return `<div><label>${esc(label)}</label><select name="${esc(name)}" required>
- <option value="">${esc(placeholder||"Tanlang")}</option>
- ${items.map(x=>`<option value="${esc(x.value)}">${esc(x.label)}</option>`).join("")}
- </select></div>`;
 }
 
 /* ROL TANLASH */
+
 document.querySelectorAll("[data-role]").forEach(button=>{
+
  button.addEventListener("click",()=>chooseRole(button.dataset.role));
+
 });
 
 function chooseRole(role){
+
  selectedRole=role;
 
  document.querySelectorAll("[data-role]").forEach(b=>
@@ -361,27 +1205,40 @@ function chooseRole(role){
 
  $("rolePicker").classList.add("hidden");
  $("loginPanel").classList.remove("hidden");
+
  $("selectedRoleLabel").textContent=roleName(role);
 
  $("loginHint").textContent=role==="admin"
   ?"Admin emailingiz va parolingiz bilan kiring."
   :"Login va parolni administrator yoki ustoz bergan bo'lishi kerak.";
 
- $("loginName").placeholder=role==="admin"?"Admin emailingiz":"Sizga berilgan login";
+ $("loginName").placeholder=role==="admin"
+  ?"Admin emailingiz"
+  :"Sizga berilgan login";
+
  $("loginName").value="";
  $("loginPassword").value="";
  $("loginName").focus();
+
 }
 
 function backToRoles(){
+
  $("loginPanel").classList.add("hidden");
  $("rolePicker").classList.remove("hidden");
- document.querySelectorAll("[data-role]").forEach(b=>b.classList.remove("selected"));
+
+ document.querySelectorAll("[data-role]").forEach(b=>
+  b.classList.remove("selected")
+ );
+
  selectedRole=null;
+
 }
 
 /* LOGIN */
+
 $("loginForm").addEventListener("submit",async e=>{
+
  e.preventDefault();
 
  if(!db){
@@ -395,46 +1252,70 @@ $("loginForm").addEventListener("submit",async e=>{
  }
 
  const button=$("loginButton");
+
  button.disabled=true;
  button.textContent="Tekshirilmoqda...";
 
  try{
+
   const login=$("loginName").value.trim();
   const password=$("loginPassword").value;
 
-  if(!login||!password)throw new Error("Login va parolni kiriting.");
+  if(!login||!password)
+   throw new Error("Login va parolni kiriting.");
 
   const email=login.includes("@")
    ?login.toLowerCase()
    :login.toLowerCase()+"@login.edulife.invalid";
 
   const {error:signOutError}=await db.auth.signOut();
-  if(signOutError)console.warn("Oldingi sessiyani yopish:",signOutError.message);
 
-  const {data,error}=await db.auth.signInWithPassword({email,password});
+  if(signOutError){
+   console.warn("Oldingi sessiyani yopish:",signOutError.message);
+  }
+
+  const {data,error}=await db.auth.signInWithPassword({
+   email,
+   password
+  });
 
   if(error)throw new Error("Login xatosi: "+error.message);
-  if(!data?.user)throw new Error("Supabase foydalanuvchini qaytarmadi.");
+
+  if(!data?.user)
+   throw new Error("Supabase foydalanuvchini qaytarmadi.");
 
   await enterApp(data.user,selectedRole);
 
  }catch(e){
+
   fail(e);
+
  }finally{
+
   button.disabled=false;
   button.textContent="Kirish";
+
  }
+
 });
 
-/* PROFILNI TOPISH VA ILОVAGA KIRISH */
+/* PROFIL VA ILOVAGA KIRISH */
+
 async function enterApp(authUser,chosenRole){
+
  try{
+
   const {data:authData,error:authError}=await db.auth.getUser();
 
-  if(authError)throw new Error("Auth tekshiruvi xatosi: "+authError.message);
+  if(authError){
+   throw new Error("Auth tekshiruvi xatosi: "+authError.message);
+  }
 
   const currentUser=authData?.user||authUser;
-  if(!currentUser?.id)throw new Error("Kirish sessiyasidan foydalanuvchi aniqlanmadi.");
+
+  if(!currentUser?.id){
+   throw new Error("Kirish sessiyasidan foydalanuvchi aniqlanmadi.");
+  }
 
   const {data:p,error:profileError}=await db
    .from("profiles")
@@ -443,25 +1324,42 @@ async function enterApp(authUser,chosenRole){
    .maybeSingle();
 
   if(profileError){
-   throw new Error("Profilni o'qish xatosi: "+profileError.message+
-    (profileError.code?" | Kod: "+profileError.code:""));
+
+   throw new Error(
+    "Profilni o'qish xatosi: "+profileError.message+
+    (profileError.code?" | Kod: "+profileError.code:"")
+   );
+
   }
 
-  if(!p)throw new Error("Profil topilmadi. Supabase profiles jadvalidagi foydalanuvchi yozuvini tekshiring.");
+  if(!p){
+   throw new Error("Profil topilmadi. Supabase profiles jadvalidagi foydalanuvchi yozuvini tekshiring.");
+  }
 
   const realRole=String(p.role||"").toLowerCase();
-  if(!realRole)throw new Error("Profil topildi, lekin role ustuni bo'sh.");
+
+  if(!realRole){
+   throw new Error("Profil topildi, lekin role ustuni bo'sh.");
+  }
 
   if(realRole==="admin"){
+
    const adminCanEnter=["admin","teacher","student"].includes(chosenRole);
 
    if(!adminCanEnter){
     await db.auth.signOut();
     throw new Error("Administrator ota-ona sifatida kira olmaydi.");
    }
+
   }else if(realRole!==chosenRole){
+
    await db.auth.signOut();
-   throw new Error("Tanlangan rol bu akkauntga mos emas. Sizning haqiqiy rolingiz: "+roleName(realRole));
+
+   throw new Error(
+    "Tanlangan rol bu akkauntga mos emas. Sizning haqiqiy rolingiz: "+
+    roleName(realRole)
+   );
+
   }
 
   user=currentUser;
@@ -472,15 +1370,18 @@ async function enterApp(authUser,chosenRole){
   $("app").style.display="block";
 
   $("topName").textContent=profile.full_name||user.email;
+
   $("topRole").textContent=roleName(activeRole)+
    (realRole==="admin"&&activeRole!=="admin"?" · Admin ko'rinishi":"");
 
   $("avatar").textContent=(profile.full_name||"E").charAt(0).toUpperCase();
 
   buildNav();
+
   await go("dashboard");
 
  }catch(e){
+
   user=null;
   profile=null;
   activeRole=null;
@@ -489,17 +1390,30 @@ async function enterApp(authUser,chosenRole){
   $("authScreen").style.display="grid";
 
   throw e;
+
  }
+
 }
 
 /* CHIQISH */
+
 async function logout(){
+
  if(user?.id&&db){
-  const {error:pushError}=await db.from("push_subscriptions").delete().eq("user_id",user.id);
-  if(pushError)console.warn("Push obunasini o'chirish:",pushError.message);
+
+  const {error:pushError}=await db
+   .from("push_subscriptions")
+   .delete()
+   .eq("user_id",user.id);
+
+  if(pushError){
+   console.warn("Push obunasini o'chirish:",pushError.message);
+  }
+
  }
 
  const {error}=await db.auth.signOut();
+
  if(error)console.error(error);
 
  user=null;
@@ -514,9 +1428,11 @@ async function logout(){
  $("rolePicker").classList.remove("hidden");
 
  toast("Tizimdan chiqdingiz");
+
 }
 
 /* NAVIGATSIYA */
+
 const baseNav=[
  ["dashboard","⌂","Bosh sahifa"],
  ["courses","▣","Kurslar"],
@@ -531,13 +1447,24 @@ const baseNav=[
 ];
 
 function buildNav(){
+
  let items=[...baseNav];
 
- if(isTeacher())items.splice(1,0,["accounts","♙","Akkauntlar"]);
+ if(isTeacher()){
+  items.splice(1,0,["accounts","♙","Akkauntlar"]);
+ }
 
  if(isAdmin()){
-  items=items.filter(x=>["dashboard","accounts","statistics","profile"].includes(x[0]));
+  items=items.filter(x=>
+   ["dashboard","accounts","statistics","profile"].includes(x[0])
+  );
  }
+
+ if(activeRole==="student"||activeRole==="parent"){
+  items.push(["achievements","🏆","Yutuqlar"]);
+ }
+
+ items.push(["pdf-report","📄","PDF hisobot"]);
 
  $("nav").innerHTML=items.map(([id,ico,title])=>
   `<button type="button" data-page="${id}" class="${id===currentPage?"active":""}">${ico} &nbsp; ${title}</button>`
@@ -546,6 +1473,7 @@ function buildNav(){
  $("nav").querySelectorAll("[data-page]").forEach(b=>
   b.addEventListener("click",()=>go(b.dataset.page))
  );
+
 }
 
 function toggleMenu(){
@@ -553,8 +1481,11 @@ function toggleMenu(){
 }
 
 async function go(page){
+
  currentPage=page;
+
  $("sidebar").classList.remove("open");
+
  buildNav();
 
  $("page").innerHTML='<div class="card">Yuklanmoqda...</div>';
@@ -570,19 +1501,29 @@ async function go(page){
   messages:renderMessages,
   schedule:renderSchedule,
   statistics:renderStatistics,
-  profile:renderProfile
+  profile:renderProfile,
+  achievements:renderAchievements,
+  "pdf-report":renderPdfReports
  };
 
  try{
+
   if(!map[page])throw new Error("Bo'lim topilmadi");
+
   await map[page]();
+
  }catch(e){
+
   fail(e);
+
  }
+
 }
 
 /* BOSH SAHIFA */
+
 async function renderDashboard(){
+
  const [c,g,a,t]=await Promise.all([
   countRows("courses"),
   countRows("grades"),
@@ -593,6 +1534,7 @@ async function renderDashboard(){
  let family="";
 
  if(activeRole==="parent"){
+
   const [links,people]=await Promise.all([
    rows("parent_student_links","student_id"),
    rows("profiles","id,full_name,role")
@@ -601,18 +1543,27 @@ async function renderDashboard(){
   const names=makeNameMap(people);
 
   family=`<div class="card"><h3>Farzandlaringiz</h3>
-   ${links.length?links.map(l=>`<p>👤 <b>${esc(personName(l.student_id,names))}</b></p>`).join(""):empty("Farzand hali bog'lanmagan")}
+   ${links.length
+    ?links.map(l=>`<p>👤 <b>${esc(personName(l.student_id,names))}</b></p>`).join("")
+    :empty("Farzand hali bog'lanmagan")
+   }
   </div>`;
+
  }
 
  $("page").innerHTML=`
   <div class="page-head">
-   <div><h1>Assalomu alaykum, ${esc(profile.full_name)}!</h1>
-   <p class="muted">EduLife shaxsiy boshqaruv paneli.</p></div>
+   <div>
+    <h1>Assalomu alaykum, ${esc(profile.full_name)}!</h1>
+    <p class="muted">EduLife shaxsiy boshqaruv paneli.</p>
+   </div>
    <span class="badge gold">${esc(roleName(activeRole))}</span>
   </div>
 
-  ${profile.role==="admin"&&activeRole!=="admin"?`<div class="notice">Admin rejimi: hozir ${esc(roleName(activeRole))} interfeysini ko'ryapsiz. Ota-ona rejimi administrator uchun yopiq.</div>`:""}
+  ${profile.role==="admin"&&activeRole!=="admin"
+   ?`<div class="notice">Admin rejimi: hozir ${esc(roleName(activeRole))} interfeysini ko'ryapsiz. Ota-ona rejimi administrator uchun yopiq.</div>`
+   :""
+  }
 
   <div class="grid">
    ${statCard("Kurslar",c,"▣")}
@@ -631,62 +1582,110 @@ async function renderDashboard(){
   </div>
 
   <div class="two">
-   <div class="card"><h3>EduLife</h3><p>Barcha o'quv jarayoni bir joyda.</p><button class="btn gold" onclick="go('courses')">Kurslarni ochish</button></div>
-   <div class="card"><h3>Hisobingiz</h3><p>${esc(profile.username||user.email)}</p><p>Ko'rinish: ${esc(roleName(activeRole))}</p></div>
+   <div class="card">
+    <h3>EduLife</h3>
+    <p>Barcha o'quv jarayoni bir joyda.</p>
+    <button class="btn gold" onclick="go('courses')">Kurslarni ochish</button>
+   </div>
+   <div class="card">
+    <h3>Hisobingiz</h3>
+    <p>${esc(profile.username||user.email)}</p>
+    <p>Ko'rinish: ${esc(roleName(activeRole))}</p>
+   </div>
   </div>`;
+
 }
 
 /* AKKAUNTLAR */
+
 async function renderAccounts(){
- if(!isTeacher())throw new Error("Bu bo'lim faqat ustoz va admin uchun");
+
+ if(!isTeacher()){
+  throw new Error("Bu bo'lim faqat ustoz va admin uchun");
+ }
 
  const people=await rows("profiles","id,full_name,role,username");
- let html=`<div class="page-head"><div><h1>Akkauntlar</h1><p class="muted">Login va parollarni shu yerdan bering.</p></div></div>`;
+
+ let html=`
+ <div class="page-head">
+  <div>
+   <h1>Akkauntlar</h1>
+   <p class="muted">Login va parollarni shu yerdan bering.</p>
+  </div>
+ </div>`;
 
  if(isAdmin()){
-  html+=`<div class="card"><h3>Yangi ustoz akkaunti</h3>
+
+  html+=`
+  <div class="card">
+   <h3>Yangi ustoz akkaunti</h3>
    <form id="issueTeacherForm">
     <input type="hidden" name="role" value="teacher">
     <div class="form-grid">
      ${field("full_name","Ustozning ism-familiyasi","Masalan: Ali Valiyev")}
      ${field("username","Ustoz logini","Masalan: ali_ustoz")}
      ${field("password","Boshlang'ich parol","Kamida 8 belgi","text")}
-     <div class="wide"><button class="btn gold">Ustoz akkauntini yaratish</button></div>
+     <div class="wide">
+      <button class="btn gold">Ustoz akkauntini yaratish</button>
+     </div>
     </div>
    </form>
   </div>`;
+
  }else{
-  const courses=(await rows("courses","id,title,teacher_id")).filter(c=>c.teacher_id===user.id);
+
+  const courses=(await rows("courses","id,title,teacher_id"))
+   .filter(c=>c.teacher_id===user.id);
+
   const students=people.filter(p=>p.role==="student");
 
-  html+=`<div class="card"><h3>Yangi o'quvchi akkaunti</h3>
+  html+=`
+  <div class="card">
+   <h3>Yangi o'quvchi akkaunti</h3>
    <form id="issueStudentForm">
     <input type="hidden" name="role" value="student">
+
     <div class="form-grid">
      ${field("full_name","O'quvchining ism-familiyasi","Masalan: Vali Aliyev")}
      ${field("username","O'quvchi logini","Masalan: vali_09")}
      ${field("password","Boshlang'ich parol","Kamida 8 belgi","text")}
-     <div><label>Kurs</label><select name="course_id" required>
-      <option value="">Kursni tanlang</option>
-      ${courses.map(c=>`<option value="${esc(c.id)}">${esc(c.title)}</option>`).join("")}
-     </select></div>
-     <div class="wide"><button class="btn gold">O'quvchi akkauntini yaratish</button></div>
+
+     <div>
+      <label>Kurs</label>
+      <select name="course_id" required>
+       <option value="">Kursni tanlang</option>
+       ${courses.map(c=>`<option value="${esc(c.id)}">${esc(c.title)}</option>`).join("")}
+      </select>
+     </div>
+
+     <div class="wide">
+      <button class="btn gold">O'quvchi akkauntini yaratish</button>
+     </div>
     </div>
    </form>
   </div>
 
-  <div class="card"><h3>Yangi ota-ona akkaunti</h3>
+  <div class="card">
+   <h3>Yangi ota-ona akkaunti</h3>
    <form id="issueParentForm">
     <input type="hidden" name="role" value="parent">
+
     <div class="form-grid">
      ${field("full_name","Ota-onaning ism-familiyasi","Masalan: Malika Aliyeva")}
      ${field("username","Ota-ona logini","Masalan: malika_ona")}
      ${field("password","Boshlang'ich parol","Kamida 8 belgi","text")}
-     <div><label>Farzand</label><select name="student_id" required>
-      <option value="">O'quvchini tanlang</option>
-      ${students.map(p=>`<option value="${esc(p.id)}">${esc(p.full_name||"O'quvchi")}</option>`).join("")}
-     </select></div>
-     <div class="wide"><button class="btn gold">Ota-ona akkauntini yaratish</button></div>
+
+     <div>
+      <label>Farzand</label>
+      <select name="student_id" required>
+       <option value="">O'quvchini tanlang</option>
+       ${students.map(p=>`<option value="${esc(p.id)}">${esc(p.full_name||"O'quvchi")}</option>`).join("")}
+      </select>
+     </div>
+
+     <div class="wide">
+      <button class="btn gold">Ota-ona akkauntini yaratish</button>
+     </div>
     </div>
    </form>
   </div>`;
@@ -694,11 +1693,14 @@ async function renderAccounts(){
   if(!courses.length){
    html+=`<div class="notice">Avval Kurslar bo'limida kurs yarating. Keyin o'quvchiga login bering.</div>`;
   }
+
  }
 
  if(lastIssued){
+
   html+=`
-  <div class="card"><h3>Oxirgi yaratilgan akkaunt</h3>
+  <div class="card">
+   <h3>Oxirgi yaratilgan akkaunt</h3>
    <p>Ism: <b>${esc(lastIssued.name)}</b></p>
    <p>Rol: <b>${esc(roleName(lastIssued.role))}</b></p>
    <p>Login: <b>${esc(lastIssued.username)}</b></p>
@@ -706,17 +1708,36 @@ async function renderAccounts(){
    <button class="btn dark" onclick="copyCredentials()">Login va parolni nusxalash</button>
    <div class="notice">Login-parolni tegishli foydalanuvchiga xavfsiz tarzda bering. Parol doimiy ro'yxatda ochiq saqlanmaydi.</div>
   </div>`;
+
  }
 
- html+=`<div class="card"><h3>Foydalanuvchilar (${people.length})</h3><div class="table-wrap">
-  <table><thead><tr><th>Ism</th><th>Login</th><th>Rol</th></tr></thead><tbody>
-  ${people.map(p=>`<tr><td>${esc(p.full_name||"Ism kiritilmagan")}</td><td>${esc(p.username||"—")}</td><td>${esc(roleName(p.role))}</td></tr>`).join("")}
-  </tbody></table></div></div>`;
+ html+=`
+ <div class="card">
+  <h3>Foydalanuvchilar (${people.length})</h3>
+  <div class="table-wrap">
+   <table>
+    <thead>
+     <tr><th>Ism</th><th>Login</th><th>Rol</th></tr>
+    </thead>
+    <tbody>
+     ${people.map(p=>`
+      <tr>
+       <td>${esc(p.full_name||"Ism kiritilmagan")}</td>
+       <td>${esc(p.username||"—")}</td>
+       <td>${esc(roleName(p.role))}</td>
+      </tr>
+     `).join("")}
+    </tbody>
+   </table>
+  </div>
+ </div>`;
 
  $("page").innerHTML=html;
+
 }
 
 async function issueAccount(form){
+
  const f=new FormData(form);
 
  const body={
@@ -726,9 +1747,14 @@ async function issueAccount(form){
   role:String(f.get("role")||"")
  };
 
- if(body.full_name.length<2)throw new Error("Ism-familiyani to'liq kiriting.");
- if(body.username.length<3)throw new Error("Login kamida 3 belgidan iborat bo'lsin.");
- if(body.password.length<8)throw new Error("Parol kamida 8 belgidan iborat bo'lsin.");
+ if(body.full_name.length<2)
+  throw new Error("Ism-familiyani to'liq kiriting.");
+
+ if(body.username.length<3)
+  throw new Error("Login kamida 3 belgidan iborat bo'lsin.");
+
+ if(body.password.length<8)
+  throw new Error("Parol kamida 8 belgidan iborat bo'lsin.");
 
  if(f.get("course_id"))body.course_id=f.get("course_id");
  if(f.get("student_id"))body.student_id=f.get("student_id");
@@ -736,16 +1762,22 @@ async function issueAccount(form){
  const {data,error}=await db.functions.invoke("create-account",{body});
 
  if(error){
+
   let msg=error.message;
+
   try{
    const detail=await error.context.json();
    msg=detail.error||msg;
    if(detail.details)msg+=": "+detail.details;
   }catch{}
+
   throw new Error(msg);
+
  }
 
- if(!data?.success)throw new Error(data?.error||"Akkaunt yaratilmadi");
+ if(!data?.success){
+  throw new Error(data?.error||"Akkaunt yaratilmadi");
+ }
 
  lastIssued={
   name:body.full_name,
@@ -755,25 +1787,36 @@ async function issueAccount(form){
  };
 
  toast("Akkaunt muvaffaqiyatli yaratildi");
+
  await go("accounts");
+
 }
 
 function copyCredentials(){
+
  if(!lastIssued)return;
 
- const text=`EduLife login: ${lastIssued.username}\nParol: ${lastIssued.password}\nRol: ${roleName(lastIssued.role)}`;
+ const text=
+  `EduLife login: ${lastIssued.username}\nParol: ${lastIssued.password}\nRol: ${roleName(lastIssued.role)}`;
 
  if(navigator.clipboard?.writeText){
+
   navigator.clipboard.writeText(text)
    .then(()=>toast("Login va parol nusxalandi"))
    .catch(()=>toast("Login: "+lastIssued.username+" | Parol: "+lastIssued.password));
+
  }else{
+
   toast("Login: "+lastIssued.username+" | Parol: "+lastIssued.password);
+
  }
+
 }
 
 /* KURSLAR */
+
 async function renderCourses(){
+
  const [courses,people]=await Promise.all([
   rows("courses","id,title,description,teacher_id,created_at"),
   rows("profiles","id,full_name,role")
@@ -781,42 +1824,73 @@ async function renderCourses(){
 
  const names=makeNameMap(people);
 
- let html=`<div class="page-head"><div><h1>Kurslar</h1><p class="muted">Ta'lim kurslarini boshqarish.</p></div></div>`;
+ let html=`
+ <div class="page-head">
+  <div>
+   <h1>Kurslar</h1>
+   <p class="muted">Ta'lim kurslarini boshqarish.</p>
+  </div>
+ </div>`;
 
  if(isTeacher()){
+
   html+=`
-  <div class="card"><h3>Yangi kurs yaratish</h3><form id="courseForm" class="form-grid">
-   ${field("title","Kurs nomi","Masalan: Matematika")}
-   ${field("description","Kurs tavsifi","Qisqacha ma'lumot")}
-   <div class="wide"><button class="btn gold">Kurs yaratish</button></div>
-  </form></div>`;
+  <div class="card">
+   <h3>Yangi kurs yaratish</h3>
+   <form id="courseForm" class="form-grid">
+    ${field("title","Kurs nomi","Masalan: Matematika")}
+    ${field("description","Kurs tavsifi","Qisqacha ma'lumot")}
+    <div class="wide">
+     <button class="btn gold">Kurs yaratish</button>
+    </div>
+   </form>
+  </div>`;
+
  }
 
  if(activeRole==="student"){
+
   html+=`
-  <div class="card"><h3>Kursga qo'shilish</h3>
-   ${courses.length?`<form id="joinForm">
-    ${selectField("course_id","Kursni tanlang",courses.map(c=>({value:c.id,label:c.title})),"Kurs nomini tanlang")}
-    <button class="btn" style="margin-top:10px">Kursga qo'shilish</button>
-   </form>`:empty("Hozircha kurslar yo'q")}
+  <div class="card">
+   <h3>Kursga qo'shilish</h3>
+
+   ${courses.length?`
+    <form id="joinForm">
+     ${selectField(
+      "course_id",
+      "Kursni tanlang",
+      courses.map(c=>({value:c.id,label:c.title})),
+      "Kurs nomini tanlang"
+     )}
+     <button class="btn" style="margin-top:10px">Kursga qo'shilish</button>
+    </form>
+   `:empty("Hozircha kurslar yo'q")}
+
   </div>`;
+
  }
 
  html+='<div class="grid">';
 
  for(const c of courses){
-  html+=`<div class="card"><h3>${esc(c.title)}</h3>
+
+  html+=`
+  <div class="card">
+   <h3>${esc(c.title)}</h3>
    <p>${esc(c.description||"")}</p>
    <small class="muted">Ustoz: ${esc(personName(c.teacher_id,names))}</small>
   </div>`;
+
  }
 
  html+='</div>';
 
  $("page").innerHTML=html+(courses.length?"":empty("Hozircha kurslar yo'q"));
+
 }
 
 async function createCourse(form){
+
  const f=new FormData(form);
 
  const {error}=await db.from("courses").insert({
@@ -828,10 +1902,13 @@ async function createCourse(form){
  if(error)throw error;
 
  toast("Kurs yaratildi");
+
  await go("courses");
+
 }
 
 async function joinCourse(form){
+
  const id=new FormData(form).get("course_id");
 
  if(!id)throw new Error("Kursni tanlang.");
@@ -844,11 +1921,15 @@ async function joinCourse(form){
  if(error)throw error;
 
  toast("Kursga qo'shildingiz");
+
  await go("courses");
+
 }
 
 /* BAHOLAR */
+
 async function renderGrades(){
+
  const [data,courses,people]=await Promise.all([
   rows("grades","id,student_id,course_id,grade,grade_type,explanation,created_at"),
   rows("courses","id,title,teacher_id"),
@@ -857,36 +1938,95 @@ async function renderGrades(){
 
  const cm=makeCourseMap(courses);
  const pm=makeNameMap(people);
+
  const own=courses.filter(c=>isAdmin()||c.teacher_id===user.id);
 
- let html=`<div class="page-head"><div><h1>Baholar</h1><p class="muted">Baholar va ustoz izohlari.</p></div></div>`;
+ let html=`
+ <div class="page-head">
+  <div>
+   <h1>Baholar</h1>
+   <p class="muted">Baholar va ustoz izohlari.</p>
+  </div>
+ </div>`;
 
  if(isTeacher()){
+
   html+=`
-  <div class="card"><h3>Baho qo'yish</h3><form id="gradeForm" class="form-grid">
-   ${selectField("course_id","Kurs",own.map(c=>({value:c.id,label:c.title})),"Kursni tanlang")}
-   ${selectField("student_id","O'quvchi",people.filter(p=>p.role==="student").map(p=>({value:p.id,label:p.full_name||"O'quvchi"})),"O'quvchini tanlang")}
-   ${field("grade","Baho (0–100)","Masalan: 90","number")}
-   <div><label>Baho turi</label><select name="grade_type"><option value="daily">Kundalik</option><option value="exam">Imtihon</option><option value="course">Kurs</option></select></div>
-   <div class="wide"><label>Izoh / sabab</label><textarea name="explanation"></textarea></div>
-   <div class="wide"><button class="btn gold">Bahoni saqlash</button></div>
-  </form></div>`;
+  <div class="card">
+   <h3>Baho qo'yish</h3>
+   <form id="gradeForm" class="form-grid">
+
+    ${selectField(
+     "course_id",
+     "Kurs",
+     own.map(c=>({value:c.id,label:c.title})),
+     "Kursni tanlang"
+    )}
+
+    ${selectField(
+     "student_id",
+     "O'quvchi",
+     people.filter(p=>p.role==="student")
+      .map(p=>({value:p.id,label:p.full_name||"O'quvchi"})),
+     "O'quvchini tanlang"
+    )}
+
+    ${field("grade","Baho (0–100)","Masalan: 90","number")}
+
+    <div>
+     <label>Baho turi</label>
+     <select name="grade_type">
+      <option value="daily">Kundalik</option>
+      <option value="exam">Imtihon</option>
+      <option value="course">Kurs</option>
+     </select>
+    </div>
+
+    <div class="wide">
+     <label>Izoh / sabab</label>
+     <textarea name="explanation"></textarea>
+    </div>
+
+    <div class="wide">
+     <button class="btn gold">Bahoni saqlash</button>
+    </div>
+
+   </form>
+  </div>`;
+
  }
 
  html+='<div class="list">';
 
  for(const g of data){
-  html+=`<div class="item"><strong>${esc(courseName(g.course_id,cm))} — <span class="badge gold">${esc(g.grade)}</span></strong>
+
+  html+=`
+  <div class="item">
+   <strong>
+    ${esc(courseName(g.course_id,cm))}
+    —
+    <span class="badge gold">${esc(g.grade)}</span>
+   </strong>
+
    <div>${esc(g.explanation||"Izoh yo'q")}</div>
-   <small>${esc(personName(g.student_id,pm))} · ${esc(g.grade_type)} · ${dateText(g.created_at)}</small></div>`;
+
+   <small>
+    ${esc(personName(g.student_id,pm))}
+    · ${esc(g.grade_type)}
+    · ${dateText(g.created_at)}
+   </small>
+  </div>`;
+
  }
 
  html+='</div>';
 
  $("page").innerHTML=html+(data.length?"":empty("Hozircha baholar yo'q"));
+
 }
 
 async function createGrade(form){
+
  const f=new FormData(form);
  const grade=Number(f.get("grade"));
 
@@ -906,11 +2046,15 @@ async function createGrade(form){
  if(error)throw error;
 
  toast("Baho saqlandi");
+
  await go("grades");
+
 }
 
 /* DAVOMAT */
+
 async function renderAttendance(){
+
  const [data,courses,people]=await Promise.all([
   rows("attendance","id,student_id,course_id,status,attendance_date,note"),
   rows("courses","id,title,teacher_id"),
@@ -919,38 +2063,99 @@ async function renderAttendance(){
 
  const cm=makeCourseMap(courses);
  const pm=makeNameMap(people);
+
  const own=courses.filter(c=>isAdmin()||c.teacher_id===user.id);
 
- let html=`<div class="page-head"><div><h1>Davomat</h1><p class="muted">Darsga qatnashish.</p></div></div>`;
+ let html=`
+ <div class="page-head">
+  <div>
+   <h1>Davomat</h1>
+   <p class="muted">Darsga qatnashish.</p>
+  </div>
+ </div>`;
 
  if(isTeacher()){
+
   html+=`
-  <div class="card"><h3>Davomat belgilash</h3><form id="attendanceForm" class="form-grid">
-   ${selectField("course_id","Kurs",own.map(c=>({value:c.id,label:c.title})),"Kursni tanlang")}
-   ${selectField("student_id","O'quvchi",people.filter(p=>p.role==="student").map(p=>({value:p.id,label:p.full_name||"O'quvchi"})),"O'quvchini tanlang")}
-   <div><label>Holat</label><select name="status"><option value="present">Keldi</option><option value="absent">Kelmagan</option><option value="late">Kechikdi</option></select></div>
-   ${field("attendance_date","Sana","","date")}
-   <div class="wide"><label>Izoh</label><textarea name="note"></textarea></div>
-   <div class="wide"><button class="btn gold">Saqlash</button></div>
-  </form></div>`;
+  <div class="card">
+   <h3>Davomat belgilash</h3>
+   <form id="attendanceForm" class="form-grid">
+
+    ${selectField(
+     "course_id",
+     "Kurs",
+     own.map(c=>({value:c.id,label:c.title})),
+     "Kursni tanlang"
+    )}
+
+    ${selectField(
+     "student_id",
+     "O'quvchi",
+     people.filter(p=>p.role==="student")
+      .map(p=>({value:p.id,label:p.full_name||"O'quvchi"})),
+     "O'quvchini tanlang"
+    )}
+
+    <div>
+     <label>Holat</label>
+     <select name="status">
+      <option value="present">Keldi</option>
+      <option value="absent">Kelmagan</option>
+      <option value="late">Kechikdi</option>
+     </select>
+    </div>
+
+    ${field("attendance_date","Sana","","date")}
+
+    <div class="wide">
+     <label>Izoh</label>
+     <textarea name="note"></textarea>
+    </div>
+
+    <div class="wide">
+     <button class="btn gold">Saqlash</button>
+    </div>
+
+   </form>
+  </div>`;
+
  }
 
  html+='<div class="list">';
 
  for(const a of data){
-  const label={present:"Keldi",absent:"Kelmagan",late:"Kechikdi"}[a.status]||a.status;
 
-  html+=`<div class="item"><strong>${esc(courseName(a.course_id,cm))} <span class="badge">${esc(label)}</span></strong>
+  const label={
+   present:"Keldi",
+   absent:"Kelmagan",
+   late:"Kechikdi"
+  }[a.status]||a.status;
+
+  html+=`
+  <div class="item">
+   <strong>
+    ${esc(courseName(a.course_id,cm))}
+    <span class="badge">${esc(label)}</span>
+   </strong>
+
    <div>${esc(a.note||"")}</div>
-   <small>${esc(personName(a.student_id,pm))} · ${esc(a.attendance_date||"")}</small></div>`;
+
+   <small>
+    ${esc(personName(a.student_id,pm))}
+    · ${esc(a.attendance_date||"")}
+   </small>
+  </div>`;
+
  }
 
  html+='</div>';
 
  $("page").innerHTML=html+(data.length?"":empty("Davomat yozuvlari yo'q"));
+
 }
 
 async function createAttendance(form){
+
  const f=new FormData(form);
 
  const {error}=await db.from("attendance").insert({
@@ -965,11 +2170,15 @@ async function createAttendance(form){
  if(error)throw error;
 
  toast("Davomat saqlandi");
+
  await go("attendance");
+
 }
 
 /* UY VAZIFALARI */
+
 async function renderAssignments(){
+
  const [data,courses,subs,people]=await Promise.all([
   rows("assignments","id,course_id,title,description,due_at"),
   rows("courses","id,title,teacher_id"),
@@ -979,50 +2188,100 @@ async function renderAssignments(){
 
  const cm=makeCourseMap(courses);
  const pm=makeNameMap(people);
+
  const own=courses.filter(c=>isAdmin()||c.teacher_id===user.id);
 
- let html=`<div class="page-head"><div><h1>Uy vazifalari</h1><p class="muted">Topshiriqlar va javoblar.</p></div></div>`;
+ let html=`
+ <div class="page-head">
+  <div>
+   <h1>Uy vazifalari</h1>
+   <p class="muted">Topshiriqlar va javoblar.</p>
+  </div>
+ </div>`;
 
  if(isTeacher()){
+
   html+=`
-  <div class="card"><h3>Vazifa yaratish</h3><form id="assignmentForm" class="form-grid">
-   ${selectField("course_id","Kurs",own.map(c=>({value:c.id,label:c.title})),"Kursni tanlang")}
-   ${field("title","Vazifa nomi","Masalan: 5-mashq")}
-   <div class="wide"><label>Tavsif</label><textarea name="description" required></textarea></div>
-   ${field("due_at","Muddati","","datetime-local")}
-   <div class="wide"><button class="btn gold">Vazifa yaratish</button></div>
-  </form></div>`;
+  <div class="card">
+   <h3>Vazifa yaratish</h3>
+   <form id="assignmentForm" class="form-grid">
+
+    ${selectField(
+     "course_id",
+     "Kurs",
+     own.map(c=>({value:c.id,label:c.title})),
+     "Kursni tanlang"
+    )}
+
+    ${field("title","Vazifa nomi","Masalan: 5-mashq")}
+
+    <div class="wide">
+     <label>Tavsif</label>
+     <textarea name="description" required></textarea>
+    </div>
+
+    ${field("due_at","Muddati","","datetime-local")}
+
+    <div class="wide">
+     <button class="btn gold">Vazifa yaratish</button>
+    </div>
+
+   </form>
+  </div>`;
+
  }
 
  html+='<div class="list">';
 
  for(const a of data){
-  const mine=subs.find(s=>s.assignment_id===a.id&&s.student_id===user.id);
+
+  const mine=subs.find(s=>
+   s.assignment_id===a.id&&s.student_id===user.id
+  );
+
   const answers=subs.filter(s=>s.assignment_id===a.id);
 
-  html+=`<div class="item"><strong>${esc(a.title)}</strong>
+  html+=`
+  <div class="item">
+
+   <strong>${esc(a.title)}</strong>
+
    <div>${esc(a.description||"")}</div>
-   <small>Kurs: ${esc(courseName(a.course_id,cm))} · Muddat: ${dateText(a.due_at)}</small>
+
+   <small>
+    Kurs: ${esc(courseName(a.course_id,cm))}
+    · Muddat: ${dateText(a.due_at)}
+   </small>
 
    ${activeRole==="student"?`
     <form class="submissionForm" data-assignment="${esc(a.id)}" style="margin-top:12px">
      <label>Javobingiz</label>
      <textarea name="content" required>${esc(mine?.content||"")}</textarea>
      <button class="btn" style="margin-top:8px">${mine?"Javobni yangilash":"Javob yuborish"}</button>
-    </form>`:""}
+    </form>
+   `:""}
 
-   ${isTeacher()?`<details style="margin-top:10px"><summary>Yuborilgan javoblar (${answers.length})</summary>
-    ${answers.map(s=>`<p><b>${esc(personName(s.student_id,pm))}:</b> ${esc(s.content)}</p>`).join("")||empty("Javoblar yo'q")}
-   </details>`:""}
+   ${isTeacher()?`
+    <details style="margin-top:10px">
+     <summary>Yuborilgan javoblar (${answers.length})</summary>
+     ${answers.map(s=>`
+      <p><b>${esc(personName(s.student_id,pm))}:</b> ${esc(s.content)}</p>
+     `).join("")||empty("Javoblar yo'q")}
+    </details>
+   `:""}
+
   </div>`;
+
  }
 
  html+='</div>';
 
  $("page").innerHTML=html+(data.length?"":empty("Hozircha vazifalar yo'q"));
+
 }
 
 async function createAssignment(form){
+
  const f=new FormData(form);
 
  const {error}=await db.from("assignments").insert({
@@ -1036,10 +2295,13 @@ async function createAssignment(form){
  if(error)throw error;
 
  toast("Vazifa yaratildi");
+
  await go("assignments");
+
 }
 
 async function submitAssignment(form){
+
  const content=new FormData(form).get("content").trim();
  const assignment_id=form.dataset.assignment;
 
@@ -1053,16 +2315,24 @@ async function submitAssignment(form){
 
  const res=old
   ?await db.from("submissions").update({content}).eq("id",old.id)
-  :await db.from("submissions").insert({assignment_id,student_id:user.id,content});
+  :await db.from("submissions").insert({
+    assignment_id,
+    student_id:user.id,
+    content
+   });
 
  if(res.error)throw res.error;
 
  toast("Javob yuborildi");
+
  await go("assignments");
+
 }
 
 /* IZOHLAR */
+
 async function renderComments(){
+
  const [data,courses,people]=await Promise.all([
   rows("course_comments","id,course_id,student_id,teacher_id,body,created_at"),
   rows("courses","id,title"),
@@ -1072,35 +2342,63 @@ async function renderComments(){
  const cm=makeCourseMap(courses);
  const pm=makeNameMap(people);
 
- let html=`<div class="page-head"><div><h1>Izohlar</h1><p class="muted">Kurs bo'yicha fikrlar.</p></div></div>`;
+ let html=`
+ <div class="page-head">
+  <div>
+   <h1>Izohlar</h1>
+   <p class="muted">Kurs bo'yicha fikrlar.</p>
+  </div>
+ </div>`;
 
  if(activeRole==="student"||isTeacher()){
+
   html+=`
-  <div class="card"><h3>Izoh yozish</h3><form id="commentForm">
-   <div class="field"><label>Kurs</label><select name="course_id" required>
-    ${courses.map(c=>`<option value="${esc(c.id)}">${esc(c.title)}</option>`).join("")}
-   </select></div>
-   <div class="field"><label>Izoh</label><textarea name="body" required></textarea></div>
-   <button class="btn gold">Yuborish</button>
-  </form></div>`;
+  <div class="card">
+   <h3>Izoh yozish</h3>
+   <form id="commentForm">
+
+    <div class="field">
+     <label>Kurs</label>
+     <select name="course_id" required>
+      ${courses.map(c=>`<option value="${esc(c.id)}">${esc(c.title)}</option>`).join("")}
+     </select>
+    </div>
+
+    <div class="field">
+     <label>Izoh</label>
+     <textarea name="body" required></textarea>
+    </div>
+
+    <button class="btn gold">Yuborish</button>
+
+   </form>
+  </div>`;
+
  }
 
  html+='<div class="list">';
 
  for(const c of data){
+
   const authorId=c.student_id||c.teacher_id;
 
-  html+=`<div class="item"><strong>${esc(courseName(c.course_id,cm))}</strong>
+  html+=`
+  <div class="item">
+   <strong>${esc(courseName(c.course_id,cm))}</strong>
    <div>${esc(c.body)}</div>
-   <small>${esc(personName(authorId,pm))} · ${dateText(c.created_at)}</small></div>`;
+   <small>${esc(personName(authorId,pm))} · ${dateText(c.created_at)}</small>
+  </div>`;
+
  }
 
  html+='</div>';
 
  $("page").innerHTML=html+(data.length?"":empty("Izohlar yo'q"));
+
 }
 
 async function createComment(form){
+
  const f=new FormData(form);
  const teacher=isTeacher();
 
@@ -1114,11 +2412,15 @@ async function createComment(form){
  if(error)throw error;
 
  toast("Izoh yuborildi");
+
  await go("comments");
+
 }
 
 /* XABARLAR */
+
 async function renderMessages(){
+
  const [data,people]=await Promise.all([
   rows("messages","id,sender_id,receiver_id,body,created_at"),
   rows("profiles","id,full_name,role")
@@ -1133,32 +2435,66 @@ async function renderMessages(){
    label:(p.full_name||"Foydalanuvchi")+" · "+roleName(p.role)
   }));
 
- const visible=data.filter(m=>!String(m.body||"").startsWith("EDULIFE_ROLE_"));
+ const visible=data.filter(m=>
+  !String(m.body||"").startsWith("EDULIFE_ROLE_")
+ );
 
  let html=`
- <div class="page-head"><div><h1>Xabarlar</h1><p class="muted">Shaxsiy xabarlar.</p></div></div>
- <div class="card"><h3>Xabar yuborish</h3><form id="messageForm">
-  ${selectField("receiver_id","Qabul qiluvchi",recipients,"Ismni tanlang")}
-  <div class="field"><label>Xabar</label><textarea name="body" required></textarea></div>
-  <button class="btn gold">Yuborish</button>
- </form></div><div class="list">`;
+ <div class="page-head">
+  <div>
+   <h1>Xabarlar</h1>
+   <p class="muted">Shaxsiy xabarlar.</p>
+  </div>
+ </div>
+
+ <div class="card">
+  <h3>Xabar yuborish</h3>
+  <form id="messageForm">
+
+   ${selectField(
+    "receiver_id",
+    "Qabul qiluvchi",
+    recipients,
+    "Ismni tanlang"
+   )}
+
+   <div class="field">
+    <label>Xabar</label>
+    <textarea name="body" required></textarea>
+   </div>
+
+   <button class="btn gold">Yuborish</button>
+
+  </form>
+ </div>
+
+ <div class="list">`;
 
  for(const m of visible){
+
   const outgoing=m.sender_id===user.id;
   const otherId=outgoing?m.receiver_id:m.sender_id;
   const otherName=personName(otherId,pm);
 
-  html+=`<div class="item"><strong>${outgoing?"Siz → "+esc(otherName):esc(otherName)+" → Siz"}</strong>
+  html+=`
+  <div class="item">
+   <strong>
+    ${outgoing?"Siz → "+esc(otherName):esc(otherName)+" → Siz"}
+   </strong>
    <div>${esc(m.body)}</div>
-   <small>${dateText(m.created_at)}</small></div>`;
+   <small>${dateText(m.created_at)}</small>
+  </div>`;
+
  }
 
  html+='</div>';
 
  $("page").innerHTML=html+(visible.length?"":empty("Xabarlar yo'q"));
+
 }
 
 async function createMessage(form){
+
  const f=new FormData(form);
  const receiver=f.get("receiver_id");
  const body=String(f.get("body")||"").trim();
@@ -1175,48 +2511,104 @@ async function createMessage(form){
  if(error)throw error;
 
  toast("Xabar yuborildi");
+
  await go("messages");
+
 }
 
 /* DARS JADVALI */
+
 async function renderSchedule(){
+
  const [data,courses]=await Promise.all([
   rows("lesson_schedule","id,course_id,day_of_week,start_time,end_time,room"),
   rows("courses","id,title,teacher_id")
  ]);
 
  const cm=makeCourseMap(courses);
- const own=courses.filter(c=>isAdmin()||c.teacher_id===user.id);
- const days=["","Dushanba","Seshanba","Chorshanba","Payshanba","Juma","Shanba","Yakshanba"];
 
- let html=`<div class="page-head"><div><h1>Dars jadvali</h1><p class="muted">Haftalik jadval.</p></div></div>`;
+ const own=courses.filter(c=>isAdmin()||c.teacher_id===user.id);
+
+ const days=[
+  "",
+  "Dushanba",
+  "Seshanba",
+  "Chorshanba",
+  "Payshanba",
+  "Juma",
+  "Shanba",
+  "Yakshanba"
+ ];
+
+ let html=`
+ <div class="page-head">
+  <div>
+   <h1>Dars jadvali</h1>
+   <p class="muted">Haftalik jadval.</p>
+  </div>
+ </div>`;
 
  if(isTeacher()){
+
   html+=`
-  <div class="card"><h3>Dars qo'shish</h3><form id="scheduleForm" class="form-grid">
-   ${selectField("course_id","Kurs",own.map(c=>({value:c.id,label:c.title})),"Kursni tanlang")}
-   <div><label>Hafta kuni</label><select name="day_of_week">${days.slice(1).map((d,i)=>`<option value="${i+1}">${d}</option>`).join("")}</select></div>
-   ${field("start_time","Boshlanish vaqti","","time")}
-   ${field("end_time","Tugash vaqti","","time")}
-   ${field("room","Xona","Xona raqami")}
-   <div class="wide"><button class="btn gold">Saqlash</button></div>
-  </form></div>`;
+  <div class="card">
+   <h3>Dars qo'shish</h3>
+   <form id="scheduleForm" class="form-grid">
+
+    ${selectField(
+     "course_id",
+     "Kurs",
+     own.map(c=>({value:c.id,label:c.title})),
+     "Kursni tanlang"
+    )}
+
+    <div>
+     <label>Hafta kuni</label>
+     <select name="day_of_week">
+      ${days.slice(1).map((d,i)=>
+       `<option value="${i+1}">${d}</option>`
+      ).join("")}
+     </select>
+    </div>
+
+    ${field("start_time","Boshlanish vaqti","","time")}
+    ${field("end_time","Tugash vaqti","","time")}
+    ${field("room","Xona","Xona raqami")}
+
+    <div class="wide">
+     <button class="btn gold">Saqlash</button>
+    </div>
+
+   </form>
+  </div>`;
+
  }
 
  html+='<div class="list">';
 
  for(const s of data){
-  html+=`<div class="item"><strong>${esc(courseName(s.course_id,cm))}</strong>
-   <div>${days[s.day_of_week]||"—"} · ${esc(String(s.start_time||"").slice(0,5))} – ${esc(String(s.end_time||"").slice(0,5))}</div>
-   <small>Xona: ${esc(s.room||"—")}</small></div>`;
+
+  html+=`
+  <div class="item">
+   <strong>${esc(courseName(s.course_id,cm))}</strong>
+   <div>
+    ${days[s.day_of_week]||"—"}
+    · ${esc(String(s.start_time||"").slice(0,5))}
+    – ${esc(String(s.end_time||"").slice(0,5))}
+   </div>
+   <small>Xona: ${esc(s.room||"—")}</small>
+  </div>`;
+
  }
 
  html+='</div>';
 
  $("page").innerHTML=html+(data.length?"":empty("Jadval yo'q"));
+
 }
 
 async function createSchedule(form){
+
  const f=new FormData(form);
 
  const {error}=await db.from("lesson_schedule").insert({
@@ -1231,27 +2623,57 @@ async function createSchedule(form){
  if(error)throw error;
 
  toast("Jadval saqlandi");
+
  await go("schedule");
+
 }
 
 /* PROFIL */
+
 async function renderProfile(){
+
  $("page").innerHTML=`
-  <div class="page-head"><div><h1>Profil</h1><p class="muted">Shaxsiy ma'lumotlar.</p></div></div>
-  <div class="card"><h3>${esc(profile.full_name)}</h3>
-   <p>Haqiqiy rol: <span class="badge gold">${esc(roleName(profile.role))}</span></p>
-   <p>Joriy ko'rinish: <span class="badge">${esc(roleName(activeRole))}</span></p>
+  <div class="page-head">
+   <div>
+    <h1>Profil</h1>
+    <p class="muted">Shaxsiy ma'lumotlar.</p>
+   </div>
+  </div>
+
+  <div class="card">
+   <h3>${esc(profile.full_name)}</h3>
+
+   <p>
+    Haqiqiy rol:
+    <span class="badge gold">${esc(roleName(profile.role))}</span>
+   </p>
+
+   <p>
+    Joriy ko'rinish:
+    <span class="badge">${esc(roleName(activeRole))}</span>
+   </p>
+
    <p>Login: <b>${esc(profile.username||user.email)}</b></p>
+
    <form id="profileForm">
-    <div class="field"><label>Ism va familiya</label><input name="full_name" value="${esc(profile.full_name)}" required></div>
+    <div class="field">
+     <label>Ism va familiya</label>
+     <input name="full_name" value="${esc(profile.full_name)}" required>
+    </div>
     <button class="btn gold">Profilni saqlash</button>
    </form>
   </div>
-  ${profile.role==="admin"?`<div class="notice">Siz administrator hisobidasiz. O'quvchi yoki ustoz ko'rinishiga kirishingiz mumkin. Ota-ona ko'rinishi administrator uchun yopiq.</div>`:""}
+
+  ${profile.role==="admin"
+   ?`<div class="notice">Siz administrator hisobidasiz. O'quvchi yoki ustoz ko'rinishiga kirishingiz mumkin. Ota-ona ko'rinishi administrator uchun yopiq.</div>`
+   :""
+  }
  `;
+
 }
 
 async function saveProfile(form){
+
  const name=new FormData(form).get("full_name").trim();
 
  const {error}=await db.from("profiles")
@@ -1261,38 +2683,1418 @@ async function saveProfile(form){
  if(error)throw error;
 
  profile.full_name=name;
+
  $("topName").textContent=name;
  $("avatar").textContent=name.charAt(0).toUpperCase();
 
  toast("Profil yangilandi");
+
  await go("profile");
+
 }
 
 /* STATISTIKA */
+
+function average(values){
+
+ if(!values.length)return 0;
+
+ return values.reduce((a,b)=>a+b,0)/values.length;
+
+}
+
+function percent(value){
+
+ return Math.max(0,Math.min(100,value));
+
+}
+
+function gradeTrend(values){
+
+ const sorted=[...values].sort((a,b)=>
+  new Date(a.created_at||0)-new Date(b.created_at||0)
+ );
+
+ if(sorted.length<2){
+
+  return {
+   enough:false,
+   current:average(sorted.map(x=>Number(x.grade)||0)),
+   first:0,
+   latest:0,
+   change:0
+  };
+
+ }
+
+ const middle=Math.ceil(sorted.length/2);
+
+ const first=sorted.slice(0,middle);
+ const latest=sorted.slice(middle);
+
+ const firstAvg=average(first.map(x=>Number(x.grade)||0));
+ const latestAvg=average(latest.map(x=>Number(x.grade)||0));
+
+ return {
+  enough:true,
+  first:firstAvg,
+  latest:latestAvg,
+  change:latestAvg-firstAvg,
+  current:average(sorted.map(x=>Number(x.grade)||0))
+ };
+
+}
+
+function trendLabel(change){
+
+ if(change>0.1){
+  return `<span class="stats-change up">↗ Yaxshilangan +${change.toFixed(1)}</span>`;
+ }
+
+ if(change< -0.1){
+  return `<span class="stats-change down">↘ Pasaygan ${change.toFixed(1)}</span>`;
+ }
+
+ return `<span class="stats-change same">→ Barqaror</span>`;
+
+}
+
+function courseChart(course,grades){
+
+ const trend=gradeTrend(grades);
+
+ return `
+ <div class="stats-course">
+
+  <div class="stats-course-title">
+   <h3>📘 ${esc(course.title||"Kurs")}</h3>
+   ${
+    trend.enough
+     ?trendLabel(trend.change)
+     :'<span class="badge">Yangi natija</span>'
+   }
+  </div>
+
+  ${
+   trend.enough
+   ?`
+    <div class="stats-row">
+     <span>Avval</span>
+     <div class="stats-track">
+      <div class="stats-fill old" style="width:${percent(trend.first)}%"></div>
+     </div>
+     <b>${trend.first.toFixed(1)}</b>
+    </div>
+
+    <div class="stats-row">
+     <span>Keyin</span>
+     <div class="stats-track">
+      <div class="stats-fill" style="width:${percent(trend.latest)}%"></div>
+     </div>
+     <b>${trend.latest.toFixed(1)}</b>
+    </div>
+   `
+   :`
+    <div class="stats-row">
+     <span>Natija</span>
+     <div class="stats-track">
+      <div class="stats-fill" style="width:${percent(trend.current)}%"></div>
+     </div>
+     <b>${trend.current.toFixed(1)}</b>
+    </div>
+
+    <p class="stats-hint">
+     O‘zgarishni aniqlash uchun yana kamida bitta baho kerak.
+    </p>
+   `
+  }
+
+  <div class="stats-hint">
+   Jami baholar: ${grades.length} ta · O‘rtacha: ${trend.current.toFixed(1)}
+  </div>
+
+ </div>`;
+
+}
+
 async function renderStatistics(){
- const [g,a,c,t]=await Promise.all([
-  countRows("grades"),
-  countRows("attendance"),
-  countRows("courses"),
-  countRows("assignments")
+
+ const page=$("page");
+
+ page.innerHTML=`
+  <div class="card">
+   <h3>📊 Statistikalar</h3>
+   <p>Haqiqiy ma'lumotlar yuklanmoqda...</p>
+  </div>`;
+
+ try{
+
+  if(!db||!user)throw new Error("Avval tizimga kiring.");
+
+  let studentIds=null;
+  let studentNames={};
+
+  if(activeRole==="student"){
+
+   studentIds=[user.id];
+   studentNames[user.id]=profile.full_name||"O‘quvchi";
+
+  }
+
+  if(activeRole==="parent"){
+
+   const {data:links,error:linkError}=await db
+    .from("parent_student_links")
+    .select("student_id")
+    .eq("parent_id",user.id);
+
+   if(linkError)throw linkError;
+
+   studentIds=[...new Set(
+    (links||[]).map(x=>x.student_id).filter(Boolean)
+   )];
+
+   if(!studentIds.length){
+
+    page.innerHTML=`
+     <div class="page-head">
+      <div><h1>📊 Statistikalar</h1></div>
+     </div>
+     ${empty("Hozircha bog‘langan farzand topilmadi")}
+    `;
+
+    return;
+
+   }
+
+   const {data:children,error:childrenError}=await db
+    .from("profiles")
+    .select("id,full_name")
+    .in("id",studentIds);
+
+   if(childrenError)throw childrenError;
+
+   for(const child of children||[]){
+    studentNames[child.id]=child.full_name||"O‘quvchi";
+   }
+
+  }
+
+  let gradeQuery=db
+   .from("grades")
+   .select("id,student_id,course_id,grade,created_at");
+
+  let attendanceQuery=db
+   .from("attendance")
+   .select("id,student_id,course_id,status,attendance_date");
+
+  let courseQuery=db
+   .from("courses")
+   .select("id,title,teacher_id");
+
+  if(studentIds){
+
+   gradeQuery=gradeQuery.in("student_id",studentIds);
+   attendanceQuery=attendanceQuery.in("student_id",studentIds);
+
+  }else if(activeRole==="teacher"){
+
+   gradeQuery=gradeQuery.eq("teacher_id",user.id);
+   attendanceQuery=attendanceQuery.eq("teacher_id",user.id);
+   courseQuery=courseQuery.eq("teacher_id",user.id);
+
+  }
+
+  const [gradeResult,attendanceResult,courseResult]=await Promise.all([
+   gradeQuery,
+   attendanceQuery,
+   courseQuery
+  ]);
+
+  if(gradeResult.error)throw gradeResult.error;
+  if(attendanceResult.error)throw attendanceResult.error;
+  if(courseResult.error)throw courseResult.error;
+
+  const grades=gradeResult.data||[];
+  const attendance=attendanceResult.data||[];
+  const courses=courseResult.data||[];
+
+  const courseMap=makeCourseMap(courses);
+
+  const numbers=grades
+   .map(g=>Number(g.grade))
+   .filter(n=>Number.isFinite(n));
+
+  const totalAverage=average(numbers);
+
+  const present=attendance.filter(a=>a.status==="present").length;
+  const absent=attendance.filter(a=>a.status==="absent").length;
+  const late=attendance.filter(a=>a.status==="late").length;
+
+  const attendanceRate=attendance.length
+   ?present/attendance.length*100
+   :0;
+
+  let html=`
+  <div class="page-head">
+   <div>
+    <h1>📊 Statistikalar</h1>
+    <p class="muted">Ta'lim natijalaringizning tahlili.</p>
+   </div>
+   <span class="badge gold">${esc(roleName(activeRole))}</span>
+  </div>
+
+  <div class="stats-overview">
+
+   <div class="stats-box">
+    <small>📚 Jami baholar</small>
+    <div class="number">${grades.length}</div>
+   </div>
+
+   <div class="stats-box">
+    <small>⭐ O‘rtacha baho</small>
+    <div class="number">${totalAverage.toFixed(1)}</div>
+   </div>
+
+   <div class="stats-box">
+    <small>✅ Kelgan darslar</small>
+    <div class="number">${present}</div>
+   </div>
+
+   <div class="stats-box">
+    <small>📅 Davomat</small>
+    <div class="number">${attendanceRate.toFixed(0)}%</div>
+   </div>
+
+   <div class="stats-box">
+    <small>❌ Kelmagan</small>
+    <div class="number">${absent}</div>
+   </div>
+
+   <div class="stats-box">
+    <small>⏰ Kechikkan</small>
+    <div class="number">${late}</div>
+   </div>
+
+  </div>
+
+  <div class="card">
+   <h3>📈 Fanlar bo‘yicha natijalar</h3>
+   <p class="stats-hint">
+    Avvalgi baholar guruhi va keyingi baholar guruhi taqqoslanadi.
+    Natija faqat mavjud baholar asosida hisoblanadi.
+   </p>
+  </div>`;
+
+  const studentGroups=studentIds
+   ?studentIds.map(id=>({
+      id,
+      name:studentNames[id]||"O‘quvchi",
+      grades:grades.filter(g=>g.student_id===id)
+     }))
+   :[{
+      id:null,
+      name:activeRole==="teacher"?"Sizning kurslaringiz":"Umumiy natijalar",
+      grades
+     }];
+
+  for(const group of studentGroups){
+
+   const grouped={};
+
+   for(const g of group.grades){
+
+    if(!grouped[g.course_id])grouped[g.course_id]=[];
+
+    grouped[g.course_id].push(g);
+
+   }
+
+   if(studentIds){
+
+    html+=`
+    <h2 class="stats-section-title">
+     👤 ${esc(group.name)}
+    </h2>`;
+
+   }
+
+   const courseIds=Object.keys(grouped);
+
+   if(!courseIds.length){
+
+    html+=`<div class="stats-empty">Hozircha baholar mavjud emas.</div>`;
+
+   }else{
+
+    for(const id of courseIds){
+
+     const course=courseMap[id]||{
+      id,
+      title:"Noma'lum kurs"
+     };
+
+     html+=courseChart(course,grouped[id]);
+
+    }
+
+   }
+
+  }
+
+  html+=`
+  <div class="card">
+   <h3>📅 Davomat tahlili</h3>
+
+   <div class="stats-row">
+    <span>Keldi</span>
+    <div class="stats-track">
+     <div class="stats-fill" style="width:${percent(attendanceRate)}%"></div>
+    </div>
+    <b>${attendanceRate.toFixed(0)}%</b>
+   </div>
+
+   <p class="stats-hint">
+    Jami davomat yozuvlari: ${attendance.length} ta.
+    Kelgan: ${present}, kelmagan: ${absent}, kechikkan: ${late}.
+   </p>
+
+   ${
+    attendance.length
+    ?""
+    :'<div class="stats-hint">Davomat ma’lumotlari hali kiritilmagan.</div>'
+   }
+
+  </div>
+
+  <div class="stats-hint">
+   Eslatma: baholar o‘sishi eski va yangi yozuvlar guruhini solishtirish orqali hisoblanadi.
+   Kamida ikkita baho bo‘lmasa, o‘sish yoki pasayish aniqlanmaydi.
+  </div>`;
+
+  page.innerHTML=html;
+
+ }catch(error){
+
+  console.error("Statistika xatosi:",error);
+
+  page.innerHTML=`
+   <div class="card">
+    <h3>Statistikani yuklashda xatolik</h3>
+    <p>${esc(error.message||"Ma’lumotlarni olish imkoni bo‘lmadi.")}</p>
+   </div>`;
+
+  toast(error.message||"Statistika xatosi");
+
+ }
+
+}
+
+/* YUTUQLAR */
+
+async function readStudentAchievements(studentId){
+
+ const [gradesResult,attendanceResult,submissionsResult]=await Promise.all([
+
+  db.from("grades")
+   .select("id,grade")
+   .eq("student_id",studentId),
+
+  db.from("attendance")
+   .select("id,status")
+   .eq("student_id",studentId),
+
+  db.from("submissions")
+   .select("id")
+   .eq("student_id",studentId)
+
  ]);
 
- $("page").innerHTML=`
-  <div class="page-head"><div><h1>Statistika</h1><p class="muted">Ta'lim ko'rsatkichlari.</p></div></div>
-  <div class="grid">
-   ${statCard("Baholar",g,"★")}
-   ${statCard("Davomat",a,"✓")}
-   ${statCard("Kurslar",c,"▣")}
-   ${statCard("Vazifalar",t,"✎")}
+ if(gradesResult.error)throw gradesResult.error;
+ if(attendanceResult.error)throw attendanceResult.error;
+ if(submissionsResult.error)throw submissionsResult.error;
+
+ const grades=gradesResult.data||[];
+ const attendance=attendanceResult.data||[];
+ const submissions=submissionsResult.data||[];
+
+ const numbers=grades
+  .map(g=>Number(g.grade))
+  .filter(n=>Number.isFinite(n));
+
+ const averageGrade=numbers.length
+  ?numbers.reduce((a,b)=>a+b,0)/numbers.length
+  :0;
+
+ const present=attendance.filter(a=>a.status==="present").length;
+
+ const attendanceRate=attendance.length
+  ?present/attendance.length*100
+  :0;
+
+ const taskCount=submissions.length;
+
+ const definitions=[
+
+  {
+   icon:"⭐",
+   title:"Birinchi baho",
+   description:"Birinchi bahongni olganing uchun.",
+   unlocked:grades.length>=1,
+   progress:Math.min(grades.length,1),
+   progressText:Math.min(grades.length,1)+"/1 baho"
+  },
+
+  {
+   icon:"🧠",
+   title:"Bilimdon",
+   description:"Kamida 3 ta baho va 85 yoki undan yuqori o‘rtacha natija.",
+   unlocked:grades.length>=3&&averageGrade>=85,
+   progress:grades.length<3
+    ?grades.length/3
+    :Math.min(averageGrade/85,1),
+   progressText:grades.length+"/3 baho · O‘rtacha "+averageGrade.toFixed(1)
+  },
+
+  {
+   icon:"🏆",
+   title:"A'lochi",
+   description:"Kamida bitta 95 yoki undan yuqori baho olish.",
+   unlocked:numbers.some(n=>n>=95),
+   progress:numbers.some(n=>n>=95)?1:0,
+   progressText:numbers.some(n=>n>=95)?"Bajarildi":"95+ baho kutilmoqda"
+  },
+
+  {
+   icon:"🔥",
+   title:"Faol o‘quvchi",
+   description:"Kamida 5 marta darsga kelish.",
+   unlocked:present>=5,
+   progress:Math.min(present/5,1),
+   progressText:present+"/5 kelgan dars"
+  },
+
+  {
+   icon:"🎖️",
+   title:"Intizomli",
+   description:"Kamida 5 ta davomat yozuvi va 90% qatnashuv.",
+   unlocked:attendance.length>=5&&attendanceRate>=90,
+   progress:attendance.length<5
+    ?attendance.length/5
+    :Math.min(attendanceRate/90,1),
+   progressText:attendance.length+"/5 yozuv · "+attendanceRate.toFixed(0)+"%"
+  },
+
+  {
+   icon:"📚",
+   title:"Vazifalarni bajaruvchi",
+   description:"Birinchi uy vazifasini yuborish.",
+   unlocked:taskCount>=1,
+   progress:Math.min(taskCount,1),
+   progressText:Math.min(taskCount,1)+"/1 vazifa"
+  },
+
+  {
+   icon:"💪",
+   title:"Mehnatkash",
+   description:"Kamida 5 ta uy vazifasini yuborish.",
+   unlocked:taskCount>=5,
+   progress:Math.min(taskCount/5,1),
+   progressText:taskCount+"/5 vazifa"
+  }
+
+ ];
+
+ return {
+  grades:grades.length,
+  average:averageGrade,
+  attendance:attendance.length,
+  present,
+  tasks:taskCount,
+  unlocked:definitions.filter(x=>x.unlocked).length,
+  badges:definitions
+ };
+
+}
+
+function achievementCard(b){
+
+ const progress=Math.max(0,Math.min(100,b.progress*100));
+
+ return `
+ <div class="achievement-card ${b.unlocked?"":"locked"}">
+
+  <div class="achievement-icon">
+   ${b.unlocked?b.icon:"🔒"}
   </div>
-  <div class="card"><h3>EduLife tariflari</h3><div class="two">
-   <div class="item"><strong>Oddiy xizmatlar</strong><div class="price">5 000 so'm</div></div>
-   <div class="item"><strong>Premium oylik</strong><div class="price">20 000 so'm</div></div>
-   <div class="item"><strong>Premium yillik</strong><div class="price">80 000 so'm</div></div>
-  </div><div class="notice">Tarif narxlari ko'rsatilmoqda. Haqiqiy to'lov tizimi hali ulanmagan.</div></div>`;
+
+  <h3>${esc(b.title)}</h3>
+
+  <p>${esc(b.description)}</p>
+
+  <div class="achievement-progress">
+   <div class="achievement-progress-fill" style="width:${progress}%"></div>
+  </div>
+
+  <div class="achievement-status">
+   ${b.unlocked?"✅ Ochildi":"🔒 "+esc(b.progressText)}
+  </div>
+
+ </div>`;
+
+}
+
+function studentAchievementHtml(name,stats){
+
+ return `
+ <div class="card">
+
+  <div class="page-head">
+   <h3>🎓 ${esc(name)}</h3>
+   <span class="badge gold">${stats.unlocked}/${stats.badges.length} nishon</span>
+  </div>
+
+  <div class="achievement-summary">
+
+   <div class="card">
+    <div class="muted">O‘rtacha baho</div>
+    <div class="stat">${stats.average.toFixed(1)}</div>
+   </div>
+
+   <div class="card">
+    <div class="muted">Yuborilgan vazifalar</div>
+    <div class="stat">${stats.tasks}</div>
+   </div>
+
+  </div>
+
+  <h3 style="margin:20px 0 12px">🏅 Nishonlaringiz</h3>
+
+  <div class="achievement-grid">
+   ${stats.badges.map(achievementCard).join("")}
+  </div>
+
+ </div>`;
+
+}
+
+async function renderAchievements(){
+
+ const page=$("page");
+
+ page.innerHTML=`
+  <div class="card">
+   <h3>🏆 Yutuqlar tizimi</h3>
+   <p class="muted">Baho, davomat va uy vazifalaring orqali yangi nishonlarni qo‘lga kirit.</p>
+   <p>Ma'lumotlar yuklanmoqda...</p>
+  </div>`;
+
+ if(!db||!user)throw new Error("Avval tizimga kiring.");
+
+ let students=[];
+
+ if(activeRole==="student"){
+
+  students=[{
+   id:user.id,
+   name:profile.full_name||"O‘quvchi"
+  }];
+
+ }else if(activeRole==="parent"){
+
+  const {data:links,error}=await db
+   .from("parent_student_links")
+   .select("student_id")
+   .eq("parent_id",user.id);
+
+  if(error)throw error;
+
+  const ids=[...new Set(
+   (links||[]).map(x=>x.student_id).filter(Boolean)
+  )];
+
+  if(!ids.length){
+
+   page.innerHTML=`
+    <div class="page-head">
+     <div>
+      <h1>🏆 Yutuqlar</h1>
+      <p class="muted">Farzandlaringizning yutuqlari.</p>
+     </div>
+    </div>
+    ${empty("Hozircha bog‘langan farzand yo‘q")}
+   `;
+
+   return;
+
+  }
+
+  const {data:people,error:peopleError}=await db
+   .from("profiles")
+   .select("id,full_name")
+   .in("id",ids);
+
+  if(peopleError)throw peopleError;
+
+  students=ids.map(id=>({
+   id,
+   name:(people||[]).find(p=>p.id===id)?.full_name||"O‘quvchi"
+  }));
+
+ }else{
+
+  page.innerHTML=empty("Yutuqlar hozircha o‘quvchi va ota-ona hisoblarida ko‘rinadi.");
+
+  return;
+
+ }
+
+ let html=`
+  <div class="page-head">
+   <div>
+    <h1>🏆 Yutuqlar tizimi</h1>
+    <p class="muted">Har bir harakating yangi nishonga yaqinlashtiradi!</p>
+   </div>
+  </div>`;
+
+ for(const student of students){
+
+  const stats=await readStudentAchievements(student.id);
+
+  html+=studentAchievementHtml(student.name,stats);
+
+ }
+
+ page.innerHTML=html;
+
+}
+
+/* PDF HISOBOT */
+
+function pdfDate(value){
+
+ if(!value)return "—";
+
+ const date=new Date(value);
+
+ if(Number.isNaN(date.getTime()))return "—";
+
+ return date.toLocaleDateString("uz-UZ");
+
+}
+
+function pdfAverage(items){
+
+ const values=items
+  .map(x=>Number(x.grade))
+  .filter(x=>Number.isFinite(x));
+
+ return values.length
+  ?values.reduce((a,b)=>a+b,0)/values.length
+  :0;
+
+}
+
+function gradeTypeName(value){
+
+ return ({
+  daily:"Kundalik",
+  exam:"Imtihon",
+  course:"Kurs"
+ })[value]||value||"—";
+
+}
+
+async function getReportStudents(){
+
+ if(activeRole==="student"){
+
+  return [{
+   id:user.id,
+   name:profile.full_name||"O‘quvchi"
+  }];
+
+ }
+
+ if(activeRole==="parent"){
+
+  const {data:links,error}=await db
+   .from("parent_student_links")
+   .select("student_id")
+   .eq("parent_id",user.id);
+
+  if(error)throw error;
+
+  const ids=[...new Set(
+   (links||[]).map(x=>x.student_id).filter(Boolean)
+  )];
+
+  if(!ids.length)return [];
+
+  const {data,error:peopleError}=await db
+   .from("profiles")
+   .select("id,full_name")
+   .in("id",ids);
+
+  if(peopleError)throw peopleError;
+
+  return (data||[]).map(p=>({
+   id:p.id,
+   name:p.full_name||"O‘quvchi"
+  }));
+
+ }
+
+ if(activeRole==="teacher"){
+
+  const {data:courses,error}=await db
+   .from("courses")
+   .select("id")
+   .eq("teacher_id",user.id);
+
+  if(error)throw error;
+
+  const courseIds=(courses||[]).map(c=>c.id);
+
+  if(!courseIds.length)return [];
+
+  const {data:enrollments,error:enrollmentError}=await db
+   .from("course_enrollments")
+   .select("student_id")
+   .in("course_id",courseIds);
+
+  if(enrollmentError)throw enrollmentError;
+
+  const ids=[...new Set(
+   (enrollments||[]).map(x=>x.student_id).filter(Boolean)
+  )];
+
+  if(!ids.length)return [];
+
+  const {data,error:peopleError}=await db
+   .from("profiles")
+   .select("id,full_name")
+   .in("id",ids);
+
+  if(peopleError)throw peopleError;
+
+  return (people||[]).map(p=>({
+   id:p.id,
+   name:p.full_name||"O‘quvchi"
+  }));
+
+ }
+
+ if(activeRole==="admin"){
+
+  const {data,error}=await db
+   .from("profiles")
+   .select("id,full_name")
+   .eq("role","student");
+
+  if(error)throw error;
+
+  return (data||[]).map(p=>({
+   id:p.id,
+   name:p.full_name||"O‘quvchi"
+  }));
+
+ }
+
+ return [];
+
+}
+
+async function renderPdfReports(){
+
+ const page=$("page");
+
+ page.innerHTML=`
+  <div class="card">
+   <h3>📄 PDF hisobot</h3>
+   <p>O‘quvchi ma’lumotlari yuklanmoqda...</p>
+  </div>`;
+
+ try{
+
+  const students=await getReportStudents();
+
+  if(!students.length){
+
+   page.innerHTML=`
+    <div class="page-head">
+     <div>
+      <h1>📄 PDF hisobot</h1>
+      <p class="muted">O‘quv natijalarini PDF shaklida saqlang.</p>
+     </div>
+    </div>
+    <div class="empty">Hozircha hisobot uchun o‘quvchi topilmadi.</div>
+   `;
+
+   return;
+
+  }
+
+  const isStudent=activeRole==="student";
+
+  page.innerHTML=`
+   <div class="page-head">
+    <div>
+     <h1>📄 PDF hisobot</h1>
+     <p class="muted">Baholar, davomat va ustoz izohlari.</p>
+    </div>
+   </div>
+
+   <div class="card">
+    <h3>Hisobot tayyorlash</h3>
+
+    ${
+     isStudent
+      ?'<div class="notice">Hisobot sizning shaxsiy ma’lumotlaringiz asosida tayyorlanadi.</div>'
+      :`
+       <div class="field">
+        <label>O‘quvchini tanlang</label>
+        <select id="pdfStudentSelect">
+         ${students.map(s=>
+          `<option value="${esc(s.id)}">${esc(s.name)}</option>`
+         ).join("")}
+        </select>
+       </div>
+      `
+    }
+
+    <button class="btn gold full" type="button" id="generatePdfBtn">
+     📥 PDF hisobotni tayyorlash
+    </button>
+
+    <p class="muted" style="font-size:12px;margin-bottom:0">
+     Hisobot yangi oynada ochiladi. U yerdan PDF sifatida saqlashingiz mumkin.
+    </p>
+   </div>
+
+   <div class="card">
+    <h3>Hisobot tarkibi</h3>
+    <p>⭐ Barcha baholar va fanlar bo‘yicha o‘rtacha natijalar</p>
+    <p>✅ Davomat va qatnashuv foizi</p>
+    <p>📝 Ustoz izohlari</p>
+    <p>👤 O‘quvchining ism-familiyasi</p>
+   </div>
+  `;
+
+  $("generatePdfBtn").addEventListener("click",()=>{
+
+   const id=isStudent
+    ?user.id
+    :$("pdfStudentSelect")?.value;
+
+   const student=students.find(s=>s.id===id);
+
+   if(!student){
+    toast("O‘quvchini tanlang.");
+    return;
+   }
+
+   generatePdfReport(student);
+
+  });
+
+ }catch(error){
+
+  console.error("PDF bo‘limi:",error);
+
+  page.innerHTML=`
+   <div class="card">
+    <h3>Hisobotni ochib bo‘lmadi</h3>
+    <p>${esc(error.message)}</p>
+   </div>`;
+
+ }
+
+}
+
+async function generatePdfReport(student){
+
+ const reportWindow=window.open("about:blank","_blank");
+
+ if(!reportWindow){
+
+  toast("Yangi oyna ochilmadi. Brauzerda pop-up ruxsatini yoqing.");
+
+  return;
+
+ }
+
+ reportWindow.document.open();
+
+ reportWindow.document.write(`
+  <!DOCTYPE html>
+  <html lang="uz">
+  <head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width,initial-scale=1">
+   <title>EduLife PDF hisobot</title>
+  </head>
+  <body style="font-family:Arial;padding:25px">
+   <h2>EduLife hisobot</h2>
+   <p>Ma’lumotlar tayyorlanmoqda...</p>
+  </body>
+  </html>
+ `);
+
+ reportWindow.document.close();
+
+ try{
+
+  const [gradeResult,attendanceResult,courseResult]=await Promise.all([
+
+   db.from("grades")
+    .select("course_id,grade,grade_type,explanation,created_at")
+    .eq("student_id",student.id)
+    .order("created_at",{ascending:true}),
+
+   db.from("attendance")
+    .select("course_id,status,attendance_date,note")
+    .eq("student_id",student.id)
+    .order("attendance_date",{ascending:true}),
+
+   db.from("courses")
+    .select("id,title")
+
+  ]);
+
+  if(gradeResult.error)throw gradeResult.error;
+  if(attendanceResult.error)throw attendanceResult.error;
+  if(courseResult.error)throw courseResult.error;
+
+  const grades=gradeResult.data||[];
+  const attendance=attendanceResult.data||[];
+  const courses=courseResult.data||[];
+
+  const courseMap=Object.fromEntries(
+   courses.map(c=>[c.id,c.title])
+  );
+
+  const averageGrade=pdfAverage(grades);
+
+  const present=attendance.filter(a=>a.status==="present").length;
+  const absent=attendance.filter(a=>a.status==="absent").length;
+  const late=attendance.filter(a=>a.status==="late").length;
+
+  const attendanceRate=attendance.length
+   ?present/attendance.length*100
+   :0;
+
+  const groups={};
+
+  grades.forEach(g=>{
+
+   const key=g.course_id||"unknown";
+
+   if(!groups[key])groups[key]=[];
+
+   groups[key].push(g);
+
+  });
+
+  const courseRows=Object.entries(groups).map(([id,list])=>{
+
+   const name=courseMap[id]||"Noma’lum fan";
+   const avg=pdfAverage(list);
+
+   return `
+    <tr>
+     <td>${esc(name)}</td>
+     <td>${list.length}</td>
+     <td>${avg.toFixed(1)}</td>
+    </tr>`;
+
+  }).join("");
+
+  const gradeRows=grades.map(g=>`
+   <tr>
+    <td>${esc(courseMap[g.course_id]||"Noma’lum fan")}</td>
+    <td>${esc(g.grade)}</td>
+    <td>${esc(gradeTypeName(g.grade_type))}</td>
+    <td>${esc(pdfDate(g.created_at))}</td>
+    <td>${esc(g.explanation||"—")}</td>
+   </tr>
+  `).join("");
+
+  const attendanceRows=attendance.map(a=>`
+   <tr>
+    <td>${esc(courseMap[a.course_id]||"Noma’lum fan")}</td>
+    <td>${esc({
+     present:"Keldi",
+     absent:"Kelmagan",
+     late:"Kechikdi"
+    }[a.status]||a.status||"—")}</td>
+    <td>${esc(pdfDate(a.attendance_date))}</td>
+    <td>${esc(a.note||"—")}</td>
+   </tr>
+  `).join("");
+
+  const comments=grades.filter(g=>
+   String(g.explanation||"").trim()
+  ).map(g=>`
+   <div class="comment">
+    <b>${esc(courseMap[g.course_id]||"Fan")} — ${esc(g.grade)} ball</b>
+    <p>${esc(g.explanation)}</p>
+    <small>${esc(pdfDate(g.created_at))}</small>
+   </div>
+  `).join("");
+
+  const created=new Date().toLocaleString("uz-UZ");
+
+  reportWindow.document.open();
+
+  reportWindow.document.write(`
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EduLife — ${esc(student.name)}</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+ font-family:Arial,sans-serif;
+ color:#19263a;
+ background:#eef2f7;
+ margin:0;
+ padding:25px;
+}
+
+.sheet{
+ max-width:900px;
+ margin:0 auto;
+ padding:35px;
+ background:white;
+ box-shadow:0 5px 25px #0001;
+}
+
+.header{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap:15px;
+ border-bottom:3px solid #3979f6;
+ padding-bottom:18px;
+}
+
+.logo{
+ font-weight:800;
+ font-size:27px;
+}
+
+.logo span{color:#3979f6}
+
+.subtitle{
+ color:#64748b;
+ font-size:12px;
+ letter-spacing:2px;
+ margin-top:5px;
+}
+
+.date{
+ color:#64748b;
+ font-size:12px;
+ text-align:right;
+}
+
+h1{font-size:25px;margin:25px 0 8px}
+h2{font-size:18px;margin-top:28px;color:#234b8d}
+h3{font-size:15px}
+
+.summary{
+ display:grid;
+ grid-template-columns:repeat(4,1fr);
+ gap:10px;
+ margin:22px 0;
+}
+
+.stat{
+ border:1px solid #dce3ef;
+ border-radius:10px;
+ padding:14px;
+}
+
+.stat small{
+ display:block;
+ color:#64748b;
+ font-size:11px;
+}
+
+.stat strong{
+ display:block;
+ font-size:23px;
+ margin-top:8px;
+ color:#285fc2;
+}
+
+table{
+ width:100%;
+ border-collapse:collapse;
+ margin-top:12px;
+ font-size:12px;
+}
+
+th{
+ text-align:left;
+ background:#eaf0fc;
+ color:#254b89;
+}
+
+td,th{
+ border:1px solid #dce3ef;
+ padding:9px;
+ vertical-align:top;
+ overflow-wrap:anywhere;
+}
+
+.comment{
+ border:1px solid #dce3ef;
+ border-radius:9px;
+ padding:12px;
+ margin:9px 0;
+}
+
+.comment p{
+ margin:7px 0;
+ line-height:1.5;
+}
+
+.comment small{color:#64748b}
+
+.empty{
+ padding:16px;
+ color:#64748b;
+ background:#f5f7fb;
+ border-radius:8px;
+}
+
+.footer{
+ border-top:1px solid #dce3ef;
+ margin-top:30px;
+ padding-top:14px;
+ font-size:11px;
+ color:#64748b;
+ text-align:center;
+}
+
+.toolbar{
+ max-width:900px;
+ margin:0 auto 15px;
+ display:flex;
+ gap:10px;
+ justify-content:flex-end;
+}
+
+button{
+ padding:12px 17px;
+ border:0;
+ border-radius:9px;
+ background:#2868db;
+ color:white;
+ font-weight:bold;
+ cursor:pointer;
+}
+
+button.secondary{background:#64748b}
+
+@media(max-width:600px){
+ body{padding:10px}
+ .sheet{padding:17px}
+ .summary{grid-template-columns:repeat(2,1fr)}
+ .header{align-items:flex-start}
+ table{font-size:10px}
+ td,th{padding:6px}
+}
+
+@page{
+ size:A4;
+ margin:12mm;
+}
+
+@media print{
+ body{
+  background:white;
+  padding:0;
+ }
+
+ .sheet{
+  box-shadow:none;
+  max-width:none;
+  padding:0;
+ }
+
+ .toolbar{display:none}
+
+ h2{break-after:avoid}
+
+ tr,.comment{break-inside:avoid}
+}
+</style>
+</head>
+
+<body>
+
+<div class="toolbar">
+ <button class="secondary" onclick="window.close()">Yopish</button>
+ <button onclick="window.print()">📥 PDF sifatida saqlash</button>
+</div>
+
+<div class="sheet">
+
+ <div class="header">
+  <div>
+   <div class="logo">Edu<span>Life</span> ✦</div>
+   <div class="subtitle">SMART EDUCATION PLATFORM</div>
+  </div>
+
+  <div class="date">
+   Hisobot sanasi<br>
+   <b>${esc(created)}</b>
+  </div>
+ </div>
+
+ <h1>O‘quv natijalari hisoboti</h1>
+
+ <p><b>O‘quvchi:</b> ${esc(student.name)}</p>
+
+ <div class="summary">
+
+  <div class="stat">
+   <small>Jami baholar</small>
+   <strong>${grades.length}</strong>
+  </div>
+
+  <div class="stat">
+   <small>O‘rtacha baho</small>
+   <strong>${averageGrade.toFixed(1)}</strong>
+  </div>
+
+  <div class="stat">
+   <small>Davomat</small>
+   <strong>${attendanceRate.toFixed(0)}%</strong>
+  </div>
+
+  <div class="stat">
+   <small>Kelgan darslar</small>
+   <strong>${present}</strong>
+  </div>
+
+ </div>
+
+ <h2>1. Fanlar bo‘yicha natijalar</h2>
+
+ ${
+  courseRows
+   ?`
+    <table>
+     <thead>
+      <tr>
+       <th>Fan</th>
+       <th>Baholar soni</th>
+       <th>O‘rtacha baho</th>
+      </tr>
+     </thead>
+     <tbody>${courseRows}</tbody>
+    </table>
+   `
+   :'<div class="empty">Hozircha baholar mavjud emas.</div>'
+ }
+
+ <h2>2. Baholar va ustoz izohlari</h2>
+
+ ${
+  gradeRows
+   ?`
+    <table>
+     <thead>
+      <tr>
+       <th>Fan</th>
+       <th>Baho</th>
+       <th>Turi</th>
+       <th>Sana</th>
+       <th>Izoh</th>
+      </tr>
+     </thead>
+     <tbody>${gradeRows}</tbody>
+    </table>
+   `
+   :'<div class="empty">Baholar kiritilmagan.</div>'
+ }
+
+ <h2>3. Davomat</h2>
+
+ <p>
+  Keldi: <b>${present}</b> ·
+  Kelmagan: <b>${absent}</b> ·
+  Kechikdi: <b>${late}</b>
+ </p>
+
+ ${
+  attendanceRows
+   ?`
+    <table>
+     <thead>
+      <tr>
+       <th>Fan</th>
+       <th>Holat</th>
+       <th>Sana</th>
+       <th>Izoh</th>
+      </tr>
+     </thead>
+     <tbody>${attendanceRows}</tbody>
+    </table>
+   `
+   :'<div class="empty">Davomat ma’lumotlari yo‘q.</div>'
+ }
+
+ <h2>4. Ustoz izohlari</h2>
+
+ ${
+  comments
+   ?comments
+   :'<div class="empty">Hozircha ustoz izohlari mavjud emas.</div>'
+ }
+
+ <div class="footer">
+  Ushbu hisobot EduLife elektron kundaligi ma’lumotlari asosida yaratildi.
+  <br>
+  EduLife ✦ Smart Education Platform
+ </div>
+
+</div>
+
+</body>
+</html>
+  `);
+
+  reportWindow.document.close();
+
+  toast("Hisobot tayyor! Yangi oynada PDF saqlash tugmasini bosing.");
+
+ }catch(error){
+
+  console.error("PDF yaratish xatosi:",error);
+
+  reportWindow.document.body.innerHTML=`
+   <div style="font-family:Arial;padding:20px;color:#a22">
+    <h2>Hisobot yaratilmadi</h2>
+    <p>${esc(error.message||"Ma’lumotlarni olishda xatolik.")}</p>
+   </div>`;
+
+  toast(error.message||"PDF yaratishda xatolik");
+
+ }
+
 }
 
 /* FORM HANDLERS */
+
 const handlers={
  issueTeacherForm:issueAccount,
  issueStudentForm:issueAccount,
@@ -1309,66 +4111,2292 @@ const handlers={
 };
 
 document.addEventListener("submit",async e=>{
+
  const form=e.target;
 
  if(form.classList.contains("submissionForm")){
+
   e.preventDefault();
+
   const button=form.querySelector("button");
+
   if(button)button.disabled=true;
 
   try{
+
    await submitAssignment(form);
+
   }catch(error){
+
    fail(error);
+
   }finally{
+
    if(button)button.disabled=false;
+
   }
+
   return;
+
  }
 
  const handler=handlers[form.id];
+
  if(!handler)return;
 
  e.preventDefault();
 
  const button=form.querySelector("button");
+
  if(button)button.disabled=true;
 
  try{
+
   await handler(form);
+
  }catch(error){
+
   fail(error);
+
  }finally{
+
   if(button)button.disabled=false;
+
  }
+
 });
 
 /* DASTURNI ISHGA TUSHIRISH */
+
 async function start(){
+
  if(!window.supabase?.createClient){
+
   toast("Supabase kutubxonasi yuklanmadi. Internetni tekshiring.");
+
   return;
+
  }
 
  try{
-  db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
-   auth:{
-    persistSession:true,
-    autoRefreshToken:true,
-    detectSessionInUrl:false
+
+  db=window.supabase.createClient(
+   SUPABASE_URL,
+   SUPABASE_KEY,
+   {
+    auth:{
+     persistSession:true,
+     autoRefreshToken:true,
+     detectSessionInUrl:false
+    }
    }
-  });
+  );
 
   $("authScreen").style.display="grid";
   $("app").style.display="none";
 
  }catch(e){
+
   fail(e);
+
  }
+
 }
 
 start();
+
+</script>
+<script>
+/* EDULIFE — AQILLI KALENDAR */
+
+(function(){
+
+let calMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+let calSelected=calKey(new Date());
+let calEvents=[];
+let calCourses=[];
+let calLoaded=false;
+
+const oldCalGo=window.go;
+const oldCalBuildNav=window.buildNav;
+
+const calStyle=document.createElement("style");
+
+calStyle.textContent=`
+.calendar-toolbar{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ flex-wrap:wrap;
+ gap:10px;
+ margin-bottom:14px;
+}
+.calendar-month{
+ font-weight:800;
+ font-size:18px;
+ text-transform:capitalize;
+}
+.calendar-actions{
+ display:flex;
+ gap:7px;
+}
+.calendar-actions button{
+ border:1px solid var(--line);
+ color:var(--text);
+ background:var(--card);
+ padding:9px 12px;
+ border-radius:9px;
+}
+.calendar-grid{
+ display:grid;
+ grid-template-columns:repeat(7,minmax(0,1fr));
+ gap:5px;
+}
+.calendar-weekday{
+ text-align:center;
+ padding:8px 2px;
+ font-size:11px;
+ color:var(--muted);
+ font-weight:bold;
+}
+.calendar-day{
+ min-width:0;
+ min-height:72px;
+ border:1px solid var(--line);
+ border-radius:9px;
+ background:var(--item-bg);
+ color:var(--text);
+ padding:7px 3px;
+ text-align:center;
+}
+.calendar-day.outside{
+ opacity:.35;
+}
+.calendar-day.today{
+ border:2px solid var(--blue);
+}
+.calendar-day.selected{
+ background:var(--blue);
+ color:white;
+ border-color:var(--blue);
+}
+.calendar-day-number{
+ font-weight:bold;
+ font-size:13px;
+}
+.calendar-dots{
+ display:flex;
+ justify-content:center;
+ flex-wrap:wrap;
+ gap:3px;
+ margin-top:9px;
+}
+.calendar-dot{
+ width:7px;
+ height:7px;
+ border-radius:50%;
+ background:var(--blue);
+}
+.calendar-dot.exam{background:#e65b72}
+.calendar-dot.test{background:#e6c16e}
+.calendar-dot.homework{background:#3979f6}
+.calendar-dot.reminder{background:#39c58b}
+.calendar-dot.lesson{background:#9a80e8}
+.calendar-legend{
+ display:flex;
+ flex-wrap:wrap;
+ gap:12px;
+ margin-top:14px;
+ font-size:11px;
+ color:var(--muted);
+}
+.calendar-legend span{
+ display:flex;
+ align-items:center;
+ gap:5px;
+}
+.calendar-event{
+ display:flex;
+ gap:12px;
+ align-items:flex-start;
+ background:var(--item-bg);
+ border:1px solid var(--line);
+ border-radius:11px;
+ padding:13px;
+ margin:9px 0;
+}
+.calendar-event-icon{
+ font-size:25px;
+}
+.calendar-event-content{
+ min-width:0;
+ flex:1;
+}
+.calendar-event-content strong{
+ display:block;
+ margin-bottom:5px;
+ overflow-wrap:anywhere;
+}
+.calendar-event-content p{
+ color:var(--muted);
+ font-size:13px;
+ line-height:1.5;
+ margin:5px 0;
+}
+.calendar-event-time{
+ color:var(--muted);
+ font-size:11px;
+}
+.calendar-type{
+ display:inline-block;
+ font-size:10px;
+ padding:4px 8px;
+ border-radius:20px;
+ background:var(--line);
+ margin-top:6px;
+}
+.calendar-empty{
+ text-align:center;
+ border:1px dashed var(--line);
+ padding:22px;
+ border-radius:12px;
+ color:var(--muted);
+}
+@media(max-width:420px){
+ .calendar-day{min-height:58px;padding:6px 1px}
+ .calendar-dots{gap:2px;margin-top:7px}
+ .calendar-dot{width:5px;height:5px}
+ .calendar-month{font-size:15px}
+}
+`;
+
+document.head.appendChild(calStyle);
+
+/* SANA */
+
+function calKey(value){
+
+ const d=new Date(value);
+
+ return d.getFullYear()+"-"+
+  String(d.getMonth()+1).padStart(2,"0")+"-"+
+  String(d.getDate()).padStart(2,"0");
+
+}
+
+function calLocalDate(key,time="15:00"){
+
+ const [y,m,d]=key.split("-").map(Number);
+ const [h,min]=time.split(":").map(Number);
+
+ return new Date(y,m-1,d,h||0,min||0);
+
+}
+
+function calTypeName(type){
+
+ return {
+  exam:"Imtihon",
+  test:"Nazorat ishi",
+  homework:"Uy vazifasi",
+  reminder:"Eslatma",
+  lesson:"Dars"
+ }[type]||"Tadbir";
+
+}
+
+function calIcon(type){
+
+ return {
+  exam:"🎓",
+  test:"📝",
+  homework:"📚",
+  reminder:"🔔",
+  lesson:"🏫"
+ }[type]||"📅";
+
+}
+
+function calDateText(key){
+
+ return calLocalDate(key).toLocaleDateString("uz-UZ",{
+  weekday:"long",
+  day:"numeric",
+  month:"long",
+  year:"numeric"
+ });
+
+}
+
+function calTimeText(value){
+
+ if(!value)return "Vaqt belgilanmagan";
+
+ const d=new Date(value);
+
+ if(Number.isNaN(d.getTime()))return "—";
+
+ return d.toLocaleTimeString("uz-UZ",{
+  hour:"2-digit",
+  minute:"2-digit"
+ });
+
+}
+
+/* KALENDAR NAVIGATSIYASI */
+
+window.buildNav=function(){
+
+ oldCalBuildNav();
+
+ const nav=$("nav");
+
+ if(!nav||nav.querySelector('[data-page="calendar"]'))return;
+
+ const button=document.createElement("button");
+
+ button.type="button";
+ button.dataset.page="calendar";
+ button.className=currentPage==="calendar"?"active":"";
+ button.innerHTML="📅 &nbsp; Aqlli kalendar";
+
+ button.addEventListener("click",()=>{
+  window.go("calendar");
+ });
+
+ nav.appendChild(button);
+
+};
+
+/* KURS VA FOYDALANUVCHI DOIRASI */
+
+async function calGetCourses(){
+
+ let result;
+
+ if(activeRole==="admin"){
+
+  result=await db
+   .from("courses")
+   .select("id,title,teacher_id");
+
+ }else if(activeRole==="teacher"){
+
+  result=await db
+   .from("courses")
+   .select("id,title,teacher_id")
+   .eq("teacher_id",user.id);
+
+ }else{
+
+  const {data,error}=await db.rpc(
+   "edulife_calendar_course_ids"
+  );
+
+  if(error)throw error;
+
+  const ids=[...new Set(
+   (data||[]).map(x=>x.course_id).filter(Boolean)
+  )];
+
+  if(!ids.length)return [];
+
+  result=await db
+   .from("courses")
+   .select("id,title,teacher_id")
+   .in("id",ids);
+
+ }
+
+ if(result.error)throw result.error;
+
+ return result.data||[];
+
+}
+
+/* MA'LUMOTLARNI YUKLASH */
+
+async function calLoadData(){
+
+ calLoaded=false;
+ calEvents=[];
+ calCourses=[];
+
+ const courses=await calGetCourses();
+
+ calCourses=courses;
+
+ const ids=courses.map(c=>c.id);
+
+ if(!ids.length){
+  calLoaded=true;
+  return;
+ }
+
+ const [assignResult,eventResult,scheduleResult]=
+  await Promise.all([
+
+   db.from("assignments")
+    .select("id,course_id,title,description,due_at")
+    .in("course_id",ids)
+    .not("due_at","is",null),
+
+   db.from("calendar_events")
+    .select("id,course_id,title,description,event_type,event_date")
+    .in("course_id",ids),
+
+   db.from("lesson_schedule")
+    .select("id,course_id,day_of_week,start_time,end_time,room")
+    .in("course_id",ids)
+
+  ]);
+
+ if(assignResult.error)throw assignResult.error;
+ if(eventResult.error)throw eventResult.error;
+ if(scheduleResult.error)throw scheduleResult.error;
+
+ const courseNames=Object.fromEntries(
+  courses.map(c=>[c.id,c.title||"Kurs"])
+ );
+
+ const events=[];
+
+ /* UY VAZIFALARI */
+
+ for(const a of assignResult.data||[]){
+
+  events.push({
+   id:"assignment-"+a.id,
+   course_id:a.course_id,
+   course_name:courseNames[a.course_id]||"Kurs",
+   title:a.title,
+   description:a.description||"",
+   date:a.due_at,
+   type:"homework"
+  });
+
+ }
+
+ /* NAZORAT, IMTIHON VA ESLATMALAR */
+
+ for(const e of eventResult.data||[]){
+
+  events.push({
+   id:"event-"+e.id,
+   course_id:e.course_id,
+   course_name:courseNames[e.course_id]||"Kurs",
+   title:e.title,
+   description:e.description||"",
+   date:e.event_date,
+   type:e.event_type
+  });
+
+ }
+
+ /* TAKRORLANADIGAN HAFTALIK DARSLAR */
+
+ const firstDay=new Date(
+  calMonth.getFullYear(),
+  calMonth.getMonth(),
+  1
+ );
+
+ const weekday=(firstDay.getDay()+6)%7;
+
+ const gridStart=new Date(firstDay);
+ gridStart.setDate(firstDay.getDate()-weekday);
+
+ for(const s of scheduleResult.data||[]){
+
+  for(let i=0;i<42;i++){
+
+   const day=new Date(gridStart);
+   day.setDate(gridStart.getDate()+i);
+
+   const weekDay=(day.getDay()+6)%7+1;
+
+   if(weekDay!==Number(s.day_of_week))continue;
+
+   const time=String(s.start_time||"09:00").slice(0,5);
+   const [hour,minute]=time.split(":").map(Number);
+
+   day.setHours(hour||0,minute||0,0,0);
+
+   events.push({
+    id:"lesson-"+s.id+"-"+calKey(day),
+    course_id:s.course_id,
+    course_name:courseNames[s.course_id]||"Kurs",
+    title:"Dars: "+(courseNames[s.course_id]||"Kurs"),
+    description:"Xona: "+(s.room||"—")+
+     " · Tugash: "+String(s.end_time||"").slice(0,5),
+    date:day.toISOString(),
+    type:"lesson"
+   });
+
+  }
+
+ }
+
+ calEvents=events.filter(e=>{
+  const d=new Date(e.date);
+  return !Number.isNaN(d.getTime());
+ });
+
+ calEvents.sort((a,b)=>
+  new Date(a.date)-new Date(b.date)
+ );
+
+ calLoaded=true;
+
+}
+
+/* KALENDAR CHIZISH */
+
+function calDraw(){
+
+ const page=$("page");
+
+ const year=calMonth.getFullYear();
+ const month=calMonth.getMonth();
+
+ const monthName=calMonth.toLocaleDateString("uz-UZ",{
+  month:"long",
+  year:"numeric"
+ });
+
+ const first=new Date(year,month,1);
+ const offset=(first.getDay()+6)%7;
+
+ const start=new Date(year,month,1-offset);
+
+ const todayKey=calKey(new Date());
+
+ let cells="";
+
+ for(let i=0;i<42;i++){
+
+  const day=new Date(start);
+  day.setDate(start.getDate()+i);
+
+  const key=calKey(day);
+
+  const dayEvents=calEvents.filter(e=>
+   calKey(e.date)===key
+  );
+
+  const outside=day.getMonth()!==month;
+  const selected=key===calSelected;
+  const today=key===todayKey;
+
+  const dots=dayEvents.slice(0,4).map(e=>
+   `<span class="calendar-dot ${esc(e.type)}"></span>`
+  ).join("");
+
+  cells+=`
+   <button type="button"
+    class="calendar-day ${outside?"outside":""} ${selected?"selected":""} ${today?"today":""}"
+    data-cal-day="${key}">
+
+    <div class="calendar-day-number">${day.getDate()}</div>
+
+    <div class="calendar-dots">
+     ${dots}
+    </div>
+
+   </button>`;
+
+ }
+
+ const selectedEvents=calEvents.filter(e=>
+  calKey(e.date)===calSelected
+ );
+
+ let eventHtml="";
+
+ if(selectedEvents.length){
+
+  eventHtml=selectedEvents.map(e=>`
+
+   <div class="calendar-event">
+
+    <div class="calendar-event-icon">
+     ${calIcon(e.type)}
+    </div>
+
+    <div class="calendar-event-content">
+
+     <strong>${esc(e.title)}</strong>
+
+     <div class="calendar-event-time">
+      ${esc(e.course_name)}
+      · ${calTimeText(e.date)}
+     </div>
+
+     ${e.description
+      ?`<p>${esc(e.description)}</p>`
+      :""
+     }
+
+     <span class="calendar-type">
+      ${calTypeName(e.type)}
+     </span>
+
+    </div>
+
+   </div>
+
+  `).join("");
+
+ }else{
+
+  eventHtml=`<div class="calendar-empty">
+   Bu sanada rejalashtirilgan tadbir yo‘q.
+  </div>`;
+
+ }
+
+ let createForm="";
+
+ if(isTeacher()){
+
+  createForm=`
+  <div class="card">
+   <h3>➕ Yangi tadbir qo‘shish</h3>
+
+   <form id="calendarEventForm">
+
+    <div class="form-grid">
+
+     <div>
+      <label>Kurs</label>
+      <select name="course_id" required>
+       <option value="">Kursni tanlang</option>
+       ${calCourses.map(c=>
+        `<option value="${esc(c.id)}">${esc(c.title)}</option>`
+       ).join("")}
+      </select>
+     </div>
+
+     <div>
+      <label>Tadbir turi</label>
+      <select name="event_type">
+       <option value="test">📝 Nazorat ishi</option>
+       <option value="exam">🎓 Imtihon</option>
+       <option value="reminder">🔔 Eslatma</option>
+      </select>
+     </div>
+
+     <div class="wide">
+      <label>Tadbir nomi</label>
+      <input name="title" required maxlength="150"
+       placeholder="Masalan: Matematika nazorat ishi">
+     </div>
+
+     <div class="wide">
+      <label>Sana va vaqt</label>
+      <input name="event_date" type="datetime-local"
+       value="${calSelected}T15:00" required>
+     </div>
+
+     <div class="wide">
+      <label>Izoh</label>
+      <textarea name="description"
+       placeholder="Qo‘shimcha ma’lumot..."></textarea>
+     </div>
+
+     <div class="wide">
+      <button type="submit" class="btn gold full">
+       Tadbirni kalendarga qo‘shish
+      </button>
+     </div>
+
+    </div>
+
+   </form>
+  </div>`;
+
+ }
+
+ page.innerHTML=`
+
+  <div class="page-head">
+   <div>
+    <h1>📅 Aqlli kalendar</h1>
+    <p class="muted">
+     Darslar, uy vazifalari, nazorat va imtihonlar.
+    </p>
+   </div>
+
+   <span class="badge gold">
+    ${calEvents.length} ta sana
+   </span>
+  </div>
+
+  ${createForm}
+
+  <div class="card">
+
+   <div class="calendar-toolbar">
+
+    <div class="calendar-month">${esc(monthName)}</div>
+
+    <div class="calendar-actions">
+
+     <button type="button" data-cal-action="prev">‹</button>
+     <button type="button" data-cal-action="today">Bugun</button>
+     <button type="button" data-cal-action="next">›</button>
+
+    </div>
+
+   </div>
+
+   <div class="calendar-grid">
+
+    ${["Du","Se","Ch","Pa","Ju","Sh","Ya"].map(d=>
+     `<div class="calendar-weekday">${d}</div>`
+    ).join("")}
+
+    ${cells}
+
+   </div>
+
+   <div class="calendar-legend">
+    <span><i class="calendar-dot homework"></i>Vazifa</span>
+    <span><i class="calendar-dot test"></i>Nazorat</span>
+    <span><i class="calendar-dot exam"></i>Imtihon</span>
+    <span><i class="calendar-dot reminder"></i>Eslatma</span>
+    <span><i class="calendar-dot lesson"></i>Dars</span>
+   </div>
+
+  </div>
+
+  <div class="card">
+
+   <h3>📌 ${esc(calDateText(calSelected))}</h3>
+
+   ${eventHtml}
+
+  </div>
+
+ `;
+
+ /* SANA TANLASH */
+
+ page.querySelectorAll("[data-cal-day]").forEach(button=>{
+
+  button.addEventListener("click",()=>{
+
+   calSelected=button.dataset.calDay;
+
+   calDraw();
+
+  });
+
+ });
+
+ /* OY ALMASHTIRISH */
+
+ page.querySelectorAll("[data-cal-action]").forEach(button=>{
+
+  button.addEventListener("click",()=>{
+
+   const action=button.dataset.calAction;
+
+   if(action==="prev"){
+
+    calMonth.setMonth(calMonth.getMonth()-1);
+
+    calSelected=calKey(calMonth);
+
+   }else if(action==="next"){
+
+    calMonth.setMonth(calMonth.getMonth()+1);
+
+    calSelected=calKey(calMonth);
+
+   }else{
+
+    const now=new Date();
+
+    calMonth=new Date(now.getFullYear(),now.getMonth(),1);
+    calSelected=calKey(now);
+
+   }
+
+   calLoadData().then(calDraw).catch(fail);
+
+  });
+
+ });
+
+ /* YANGI TADBIR */
+
+ const form=$("calendarEventForm");
+
+ if(form){
+
+  form.addEventListener("submit",async e=>{
+
+   e.preventDefault();
+
+   const button=form.querySelector('button[type="submit"]');
+
+   button.disabled=true;
+   button.textContent="Saqlanmoqda...";
+
+   try{
+
+    const f=new FormData(form);
+
+    const title=String(f.get("title")||"").trim();
+    const date=String(f.get("event_date")||"");
+
+    if(!title)throw new Error("Tadbir nomini kiriting.");
+
+    if(!date)throw new Error("Sana va vaqtni tanlang.");
+
+    const eventDate=new Date(date);
+
+    if(Number.isNaN(eventDate.getTime())){
+     throw new Error("Sana noto‘g‘ri.");
+    }
+
+    const {error}=await db.from("calendar_events").insert({
+
+     course_id:f.get("course_id"),
+     teacher_id:user.id,
+     title,
+     description:String(f.get("description")||"").trim(),
+     event_type:f.get("event_type"),
+     event_date:eventDate.toISOString()
+
+    });
+
+    if(error)throw error;
+
+    calSelected=calKey(eventDate);
+    calMonth=new Date(
+     eventDate.getFullYear(),
+     eventDate.getMonth(),
+     1
+    );
+
+    toast("✅ Tadbir kalendarga qo‘shildi!");
+
+    await calLoadData();
+    calDraw();
+
+   }catch(error){
+
+    fail(error);
+
+   }finally{
+
+    if(button){
+     button.disabled=false;
+     button.textContent="Tadbirni kalendarga qo‘shish";
+    }
+
+   }
+
+  });
+
+ }
+
+}
+
+/* KALENDAR BO'LIMINI OCHISH */
+
+async function renderCalendar(){
+
+ const page=$("page");
+
+ page.innerHTML=`
+  <div class="card">
+   <h3>📅 Aqlli kalendar</h3>
+   <p>Ma’lumotlar yuklanmoqda...</p>
+  </div>`;
+
+ try{
+
+  await calLoadData();
+  calDraw();
+
+ }catch(error){
+
+  console.error("Kalendar xatosi:",error);
+
+  page.innerHTML=`
+   <div class="card">
+    <h3>Kalendarni yuklab bo‘lmadi</h3>
+    <p>${esc(error.message||"Noma’lum xatolik")}</p>
+   </div>`;
+
+  toast(error.message||"Kalendar xatosi");
+
+ }
+
+}
+
+/* GO FUNKSIYASIGA ULASH */
+
+window.go=async function(page){
+
+ if(page!=="calendar"){
+
+  return oldCalGo(page);
+
+ }
+
+ currentPage="calendar";
+
+ $("sidebar").classList.remove("open");
+
+ buildNav();
+
+ await renderCalendar();
+
+};
+
+})();
+</script>
+  <script>
+/* EDULIFE — SHAXSIY RIVOJLANISH */
+
+(function(){
+
+const goalPreviousGo=window.go;
+const goalPreviousBuildNav=window.buildNav;
+
+const goalStyle=document.createElement("style");
+
+goalStyle.textContent=`
+.goal-summary{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:12px;
+}
+.goal-summary-box{
+ background:var(--item-bg);
+ border:1px solid var(--line);
+ border-radius:12px;
+ padding:15px;
+}
+.goal-summary-box strong{
+ display:block;
+ color:var(--gold);
+ font-size:25px;
+ margin-top:8px;
+}
+.goal-card{
+ background:var(--item-bg);
+ border:1px solid var(--line);
+ border-radius:13px;
+ padding:16px;
+ margin-bottom:12px;
+}
+.goal-card-head{
+ display:flex;
+ align-items:flex-start;
+ justify-content:space-between;
+ gap:10px;
+}
+.goal-card h3{
+ margin:0 0 8px;
+ font-size:16px;
+}
+.goal-progress{
+ background:var(--line);
+ height:13px;
+ border-radius:20px;
+ overflow:hidden;
+ margin:15px 0 9px;
+}
+.goal-progress-fill{
+ height:100%;
+ background:var(--blue);
+ border-radius:20px;
+ transition:width .3s;
+}
+.goal-progress-fill.complete{
+ background:var(--green);
+}
+.goal-percent{
+ font-size:22px;
+ font-weight:800;
+ color:var(--gold);
+}
+.goal-description{
+ color:var(--muted);
+ font-size:12px;
+ line-height:1.6;
+}
+.goal-delete{
+ border:1px solid var(--line);
+ border-radius:8px;
+ background:transparent;
+ color:var(--red);
+ padding:7px 10px;
+}
+.goal-completed{
+ color:var(--green);
+ font-weight:bold;
+ font-size:12px;
+}
+.goal-week{
+ color:var(--muted);
+ font-size:12px;
+}
+@media(max-width:420px){
+ .goal-summary{
+  grid-template-columns:1fr 1fr;
+ }
+ .goal-card{padding:13px}
+}
+`;
+
+document.head.appendChild(goalStyle);
+
+/* HAFTA SANALARINI HISOBLASH */
+
+function goalDateKey(date){
+
+ const y=date.getFullYear();
+ const m=String(date.getMonth()+1).padStart(2,"0");
+ const d=String(date.getDate()).padStart(2,"0");
+
+ return `${y}-${m}-${d}`;
+
+}
+
+function goalGetWeek(){
+
+ const today=new Date();
+
+ const monday=new Date(
+  today.getFullYear(),
+  today.getMonth(),
+  today.getDate()
+ );
+
+ const offset=(monday.getDay()+6)%7;
+
+ monday.setDate(monday.getDate()-offset);
+
+ const sunday=new Date(monday);
+ sunday.setDate(monday.getDate()+6);
+
+ const nextMonday=new Date(monday);
+ nextMonday.setDate(monday.getDate()+7);
+
+ return {
+  start:goalDateKey(monday),
+  end:goalDateKey(sunday),
+  startISO:monday.toISOString(),
+  endISO:nextMonday.toISOString(),
+  monday,
+  sunday
+ };
+
+}
+
+function goalAverage(values){
+
+ if(!values.length)return 0;
+
+ return values.reduce((a,b)=>a+b,0)/values.length;
+
+}
+
+function goalTypeName(type){
+
+ return {
+  grade_average:"Baholar o‘rtachasi",
+  homework:"Uy vazifalari",
+  attendance:"Darsga qatnashish"
+ }[type]||type;
+
+}
+
+function goalIcon(type){
+
+ return {
+  grade_average:"⭐",
+  homework:"📚",
+  attendance:"✅"
+ }[type]||"🎯";
+
+}
+
+/* HAFTALIK MA'LUMOTLAR */
+
+async function goalLoadData(week){
+
+ const [goalResult,gradeResult,homeworkResult,attendanceResult]=
+  await Promise.all([
+
+   db.from("personal_goals")
+    .select("id,title,goal_type,target_value,week_start,created_at")
+    .eq("user_id",user.id)
+    .eq("week_start",week.start)
+    .order("created_at",{ascending:true}),
+
+   db.from("grades")
+    .select("grade,created_at")
+    .eq("student_id",user.id)
+    .gte("created_at",week.startISO)
+    .lt("created_at",week.endISO),
+
+   db.from("submissions")
+    .select("id,submitted_at")
+    .eq("student_id",user.id)
+    .gte("submitted_at",week.startISO)
+    .lt("submitted_at",week.endISO),
+
+   db.from("attendance")
+    .select("status,attendance_date")
+    .eq("student_id",user.id)
+    .gte("attendance_date",week.start)
+    .lte("attendance_date",week.end)
+
+  ]);
+
+ if(goalResult.error)throw goalResult.error;
+ if(gradeResult.error)throw gradeResult.error;
+ if(homeworkResult.error)throw homeworkResult.error;
+ if(attendanceResult.error)throw attendanceResult.error;
+
+ const grades=(gradeResult.data||[])
+  .map(x=>Number(x.grade))
+  .filter(x=>Number.isFinite(x));
+
+ const homework=homeworkResult.data||[];
+ const attendance=attendanceResult.data||[];
+
+ const gradeAverage=goalAverage(grades);
+
+ const present=attendance.filter(
+  x=>x.status==="present"
+ ).length;
+
+ return {
+  goals:goalResult.data||[],
+  gradeAverage,
+  gradeCount:grades.length,
+  homeworkCount:homework.length,
+  attendanceCount:attendance.length,
+  present
+ };
+
+}
+
+/* MAQSADNING NATIJASINI HISOBLASH */
+
+function goalCalculate(goal,data){
+
+ const target=Number(goal.target_value);
+
+ let current=0;
+ let unit="";
+
+ if(goal.goal_type==="grade_average"){
+
+  current=data.gradeAverage;
+  unit="ball";
+
+ }else if(goal.goal_type==="homework"){
+
+  current=data.homeworkCount;
+  unit="ta vazifa";
+
+ }else if(goal.goal_type==="attendance"){
+
+  current=data.present;
+  unit="ta dars";
+
+ }
+
+ const progress=target>0
+  ?Math.min(100,(current/target)*100)
+  :0;
+
+ const complete=current>=target;
+
+ return {
+  current,
+  target,
+  progress,
+  complete,
+  unit
+ };
+
+}
+
+/* MAQSAD KARTASI */
+
+function goalRenderCard(goal,data){
+
+ const result=goalCalculate(goal,data);
+
+ return `
+ <div class="goal-card">
+
+  <div class="goal-card-head">
+
+   <div>
+    <div style="font-size:25px;margin-bottom:8px">
+     ${goalIcon(goal.goal_type)}
+    </div>
+
+    <h3>${esc(goal.title)}</h3>
+
+    <div class="goal-description">
+     ${esc(goalTypeName(goal.goal_type))}
+    </div>
+   </div>
+
+   <button
+    type="button"
+    class="goal-delete"
+    data-delete-goal="${esc(goal.id)}"
+   >🗑</button>
+
+  </div>
+
+  <div class="goal-progress">
+   <div
+    class="goal-progress-fill ${result.complete?"complete":""}"
+    style="width:${result.progress}%"
+   ></div>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
+
+   <span class="goal-percent">
+    ${Math.round(result.progress)}%
+   </span>
+
+   ${
+    result.complete
+    ?'<span class="goal-completed">🏆 Maqsad bajarildi!</span>'
+    :`<span class="goal-description">${result.current.toFixed(result.unit==="ball"?1:0)} / ${result.target} ${result.unit}</span>`
+   }
+
+  </div>
+
+  <p class="goal-description">
+   ${result.complete
+    ?"Ajoyib! Bu haftalik maqsadga erishding."
+    :"Harakatni davom ettir. Maqsadingga yetishingga hali imkon bor!"
+   }
+  </p>
+
+ </div>`;
+
+}
+
+/* ASOSIY SAHIFA */
+
+async function goalRenderPage(){
+
+ const page=$("page");
+ const week=goalGetWeek();
+
+ page.innerHTML=`
+  <div class="card">
+   <h3>🎯 Shaxsiy rivojlanish</h3>
+   <p>Haftalik natijalar yuklanmoqda...</p>
+  </div>`;
+
+ if(activeRole!=="student"){
+
+  page.innerHTML=empty(
+   "Shaxsiy rivojlanish bo‘limi o‘quvchilar uchun."
+  );
+
+  return;
+
+ }
+
+ const data=await goalLoadData(week);
+
+ const complete=data.goals.filter(g=>
+  goalCalculate(g,data).complete
+ ).length;
+
+ const total=data.goals.length;
+
+ const weekText=
+  new Date(week.monday).toLocaleDateString("uz-UZ",{
+   day:"numeric",
+   month:"long"
+  })+" — "+
+  new Date(week.sunday).toLocaleDateString("uz-UZ",{
+   day:"numeric",
+   month:"long",
+   year:"numeric"
+  });
+
+ page.innerHTML=`
+
+  <div class="page-head">
+   <div>
+    <h1>🎯 Shaxsiy rivojlanish</h1>
+    <p class="muted">
+     O‘z maqsadlaringni belgilab, natijangni kuzat.
+    </p>
+   </div>
+
+   <span class="badge gold">Haftalik reja</span>
+  </div>
+
+  <div class="card">
+
+   <h3>📅 Joriy hafta</h3>
+
+   <div class="goal-week">${esc(weekText)}</div>
+
+   <div class="goal-summary" style="margin-top:15px">
+
+    <div class="goal-summary-box">
+     <span class="muted">Maqsadlar</span>
+     <strong>${total}</strong>
+    </div>
+
+    <div class="goal-summary-box">
+     <span class="muted">Bajarilgan</span>
+     <strong>${complete}/${total}</strong>
+    </div>
+
+    <div class="goal-summary-box">
+     <span class="muted">O‘rtacha baho</span>
+     <strong>${data.gradeAverage.toFixed(1)}</strong>
+    </div>
+
+    <div class="goal-summary-box">
+     <span class="muted">Bajarilgan vazifa</span>
+     <strong>${data.homeworkCount}</strong>
+    </div>
+
+   </div>
+
+  </div>
+
+  <div class="card">
+
+   <h3>➕ Yangi haftalik maqsad</h3>
+
+   <form id="personalGoalForm">
+
+    <div class="field">
+     <label>Maqsad nomi</label>
+     <input
+      name="title"
+      maxlength="120"
+      required
+      placeholder="Masalan: Matematikadan yaxshi natija"
+     >
+    </div>
+
+    <div class="field">
+     <label>Maqsad turi</label>
+
+     <select name="goal_type" id="goalTypeSelect">
+      <option value="grade_average">
+       ⭐ Baholar o‘rtachasi
+      </option>
+
+      <option value="homework">
+       📚 Uy vazifalarini bajarish
+      </option>
+
+      <option value="attendance">
+       ✅ Darsga qatnashish
+      </option>
+     </select>
+    </div>
+
+    <div class="field">
+     <label id="goalTargetLabel">Maqsad qiymati (ball)</label>
+
+     <input
+      type="number"
+      name="target_value"
+      min="1"
+      max="100"
+      step="1"
+      value="85"
+      required
+     >
+    </div>
+
+    <button class="btn gold full" type="submit">
+     🎯 Maqsadni saqlash
+    </button>
+
+   </form>
+
+  </div>
+
+  <div class="card">
+
+   <h3>🏆 Mening haftalik maqsadlarim</h3>
+
+   ${
+    total
+     ?data.goals.map(g=>goalRenderCard(g,data)).join("")
+     :empty("Hali maqsad qo‘ymading. Birinchi maqsadingni yarat!")
+   }
+
+  </div>
+
+  <div class="notice">
+   📌 Natijalar joriy haftadagi haqiqiy baholar,
+   topshirilgan vazifalar va davomatdan avtomatik hisoblanadi.
+  </div>
+ `;
+
+ /* MAQSAD TURIGA QARAB YORLIQ */
+
+ const typeSelect=$("goalTypeSelect");
+ const targetLabel=$("goalTargetLabel");
+ const targetInput=page.querySelector('[name="target_value"]');
+
+ typeSelect.addEventListener("change",()=>{
+
+  if(typeSelect.value==="grade_average"){
+
+   targetLabel.textContent="Maqsad qiymati (ball)";
+   targetInput.value="85";
+
+  }else if(typeSelect.value==="homework"){
+
+   targetLabel.textContent="Nechta vazifa bajariladi?";
+   targetInput.value="5";
+
+  }else{
+
+   targetLabel.textContent="Nechta darsga qatnashiladi?";
+   targetInput.value="5";
+
+  }
+
+ });
+
+ /* MAQSAD SAQLASH */
+
+ $("personalGoalForm").addEventListener("submit",async e=>{
+
+  e.preventDefault();
+
+  const form=e.currentTarget;
+  const button=form.querySelector("button");
+
+  button.disabled=true;
+  button.textContent="Saqlanmoqda...";
+
+  try{
+
+   const f=new FormData(form);
+
+   const title=String(f.get("title")||"").trim();
+   const type=String(f.get("goal_type")||"");
+   const target=Number(f.get("target_value"));
+
+   if(title.length<2){
+    throw new Error("Maqsad nomini to‘liq kiriting.");
+   }
+
+   if(!["grade_average","homework","attendance"].includes(type)){
+    throw new Error("Maqsad turini to‘g‘ri tanlang.");
+   }
+
+   if(!Number.isFinite(target)||target<1||target>100){
+    throw new Error("Maqsad qiymati 1 dan 100 gacha bo‘lishi kerak.");
+   }
+
+   if(type==="grade_average"&&target>100){
+    throw new Error("Baho maqsadi 100 dan oshmasligi kerak.");
+   }
+
+   const {error}=await db
+    .from("personal_goals")
+    .insert({
+     user_id:user.id,
+     title,
+     goal_type:type,
+     target_value:target,
+     week_start:week.start
+    });
+
+   if(error)throw error;
+
+   toast("✅ Haftalik maqsad saqlandi!");
+
+   await goalRenderPage();
+
+  }catch(error){
+
+   fail(error);
+
+  }finally{
+
+   button.disabled=false;
+   button.textContent="🎯 Maqsadni saqlash";
+
+  }
+
+ });
+
+ /* MAQSADNI O'CHIRISH */
+
+ page.querySelectorAll("[data-delete-goal]").forEach(button=>{
+
+  button.addEventListener("click",async()=>{
+
+   const id=button.dataset.deleteGoal;
+
+   if(!confirm("Bu maqsadni o‘chirmoqchimisiz?"))return;
+
+   button.disabled=true;
+
+   try{
+
+    const {error}=await db
+     .from("personal_goals")
+     .delete()
+     .eq("id",id)
+     .eq("user_id",user.id);
+
+    if(error)throw error;
+
+    toast("Maqsad o‘chirildi.");
+
+    await goalRenderPage();
+
+   }catch(error){
+
+    fail(error);
+    button.disabled=false;
+
+   }
+
+  });
+
+ });
+
+}
+
+/* MENYUGA QO‘SHISH */
+
+window.buildNav=function(){
+
+ goalPreviousBuildNav();
+
+ if(activeRole!=="student")return;
+
+ const nav=$("nav");
+
+ if(!nav||nav.querySelector('[data-page="personal-goals"]'))return;
+
+ const button=document.createElement("button");
+
+ button.type="button";
+ button.dataset.page="personal-goals";
+ button.className=currentPage==="personal-goals"?"active":"";
+ button.innerHTML="🎯 &nbsp; Shaxsiy rivojlanish";
+
+ button.addEventListener("click",()=>{
+  window.go("personal-goals");
+ });
+
+ nav.appendChild(button);
+
+};
+
+/* SAHIFA OCHISH */
+
+window.go=async function(page){
+
+ if(page!=="personal-goals"){
+  return goalPreviousGo(page);
+ }
+
+ currentPage="personal-goals";
+
+ $("sidebar").classList.remove("open");
+
+ buildNav();
+
+ try{
+
+  await goalRenderPage();
+
+ }catch(error){
+
+  console.error("Shaxsiy rivojlanish xatosi:",error);
+
+  $("page").innerHTML=`
+   <div class="card">
+    <h3>Shaxsiy rivojlanishni yuklab bo‘lmadi</h3>
+    <p>${esc(error.message||"Xatolik yuz berdi.")}</p>
+   </div>`;
+
+ }
+
+};
+
+})();
+</script>
+  
+<script>
+/* EDULIFE — AI USTOZ */
+
+(function(){
+
+  const aiPreviousGo = window.go;
+  const aiPreviousBuildNav = window.buildNav;
+  const aiPreviousLogout = window.logout;
+
+  let aiMessages = [];
+  let aiBusy = false;
+
+  /* DIZAYN */
+
+  const aiStyle = document.createElement("style");
+
+  aiStyle.textContent = `
+    .ai-page{
+      max-width:850px;
+      margin:auto;
+    }
+
+    .ai-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:16px;
+    }
+
+    .ai-hero{
+      background:linear-gradient(135deg,#172e50,#243d67);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:20px;
+      margin-bottom:15px;
+      color:white;
+    }
+
+    .ai-hero-icon{
+      font-size:37px;
+      margin-bottom:10px;
+    }
+
+    .ai-hero h2{
+      margin:0 0 8px;
+      font-size:21px;
+    }
+
+    .ai-hero p{
+      color:#d0ddf0;
+      font-size:13px;
+      line-height:1.6;
+      margin:0;
+    }
+
+    .ai-chat{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:15px;
+      overflow:hidden;
+    }
+
+    .ai-chat-head{
+      padding:14px 16px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      border-bottom:1px solid var(--line);
+      gap:10px;
+    }
+
+    .ai-chat-head small{
+      color:var(--muted);
+    }
+
+    .ai-messages{
+      padding:15px;
+      min-height:270px;
+      max-height:490px;
+      overflow-y:auto;
+      display:flex;
+      flex-direction:column;
+      gap:13px;
+    }
+
+    .ai-message{
+      display:flex;
+      gap:9px;
+      align-items:flex-start;
+      max-width:95%;
+    }
+
+    .ai-message.user{
+      align-self:flex-end;
+      flex-direction:row-reverse;
+    }
+
+    .ai-message.assistant{
+      align-self:flex-start;
+    }
+
+    .ai-message-icon{
+      width:33px;
+      height:33px;
+      border-radius:50%;
+      background:#253d60;
+      display:grid;
+      place-items:center;
+      flex-shrink:0;
+      font-size:17px;
+    }
+
+    .ai-message.user .ai-message-icon{
+      background:var(--gold);
+      color:#172033;
+    }
+
+    .ai-bubble{
+      background:var(--item-bg);
+      border:1px solid var(--line);
+      border-radius:13px;
+      padding:11px 13px;
+      font-size:13px;
+      line-height:1.7;
+      white-space:pre-wrap;
+      overflow-wrap:anywhere;
+      min-width:0;
+    }
+
+    .ai-message.user .ai-bubble{
+      background:#1c3b66;
+      color:white;
+      border-color:#355c91;
+    }
+
+    :root[data-theme="light"] .ai-hero{
+      background:linear-gradient(135deg,#2868db,#477ed1);
+    }
+
+    :root[data-theme="light"] .ai-message.user .ai-bubble{
+      background:#2868db;
+      color:white;
+    }
+
+    .ai-time{
+      display:block;
+      color:var(--muted);
+      font-size:10px;
+      margin-top:6px;
+    }
+
+    .ai-composer{
+      border-top:1px solid var(--line);
+      padding:13px;
+      display:flex;
+      flex-direction:column;
+      gap:9px;
+    }
+
+    .ai-composer textarea{
+      min-height:75px;
+      max-height:160px;
+      resize:vertical;
+      width:100%;
+    }
+
+    .ai-send-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .ai-send-row small{
+      color:var(--muted);
+      font-size:11px;
+    }
+
+    .ai-send-btn{
+      min-width:115px;
+    }
+
+    .ai-quick{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:13px;
+    }
+
+    .ai-quick button{
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:var(--card);
+      color:var(--text);
+      padding:9px 12px;
+      font-size:12px;
+    }
+
+    .ai-clear{
+      border:1px solid var(--line);
+      border-radius:8px;
+      background:transparent;
+      color:var(--muted);
+      padding:8px 10px;
+      font-size:11px;
+    }
+
+    .ai-warning{
+      background:var(--item-bg);
+      border:1px solid var(--line);
+      padding:12px;
+      border-radius:10px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.6;
+      margin-top:13px;
+    }
+
+    .ai-typing{
+      color:var(--muted);
+      font-size:12px;
+      padding:5px 3px;
+    }
+
+    @media(max-width:450px){
+      .ai-hero{padding:16px}
+      .ai-messages{padding:11px;min-height:230px}
+      .ai-message{max-width:100%}
+      .ai-send-btn{min-width:95px}
+    }
+  `;
+
+  document.head.appendChild(aiStyle);
+
+  /* XABARLARNI CHIZISH */
+
+  function aiMessageHtml(message){
+
+    const isUser = message.role === "user";
+
+    return `
+      <div class="ai-message ${isUser ? "user" : "assistant"}">
+
+        <div class="ai-message-icon">
+          ${isUser ? "👤" : "🎓"}
+        </div>
+
+        <div class="ai-bubble">
+          ${esc(message.content)}
+          <span class="ai-time">
+            ${isUser ? "Siz" : "AI Ustoz"}
+          </span>
+        </div>
+
+      </div>
+    `;
+  }
+
+  function aiRenderPage(){
+
+    const page = $("page");
+
+    const messagesHtml = aiMessages.length
+      ? aiMessages.map(aiMessageHtml).join("")
+      : `
+        <div class="ai-message assistant">
+          <div class="ai-message-icon">🎓</div>
+          <div class="ai-bubble">
+            Assalomu alaykum! Men EduLife AI Ustoziman.
+
+            Menga istalgan maktab fanidan savol berishingiz mumkin.
+            Mavzuni sodda tushuntiraman, masalalarni bosqichma-bosqich
+            yechishga yordam beraman va mashqlar tuzaman.
+
+            Qaysi mavzuni o‘rganamiz?
+          </div>
+        </div>
+      `;
+
+    page.innerHTML = `
+
+      <div class="ai-page">
+
+        <div class="ai-header">
+          <div>
+            <h1>🎓 AI Ustoz</h1>
+            <p class="muted">
+              Sun'iy intellekt yordamida bilim oling.
+            </p>
+          </div>
+
+          <span class="badge gold">AI YORDAMCHI</span>
+        </div>
+
+        <div class="ai-hero">
+
+          <div class="ai-hero-icon">🧠</div>
+
+          <h2>Sizning aqlli ustozingiz</h2>
+
+          <p>
+            Mavzularni tushuntirish, masalalarni bosqichma-bosqich
+            yechish, mashqlar tuzish va savollaringizga javob berish.
+          </p>
+
+        </div>
+
+        <div class="ai-chat">
+
+          <div class="ai-chat-head">
+
+            <div>
+              <strong>EduLife AI Ustoz</strong><br>
+              <small>O‘zbek tilida yordamchi</small>
+            </div>
+
+            <button
+              type="button"
+              class="ai-clear"
+              id="aiClearBtn"
+            >🗑 Suhbatni tozalash</button>
+
+          </div>
+
+          <div class="ai-messages" id="aiMessages">
+
+            ${messagesHtml}
+
+            ${aiBusy
+              ?`<div class="ai-typing">🎓 AI Ustoz javob tayyorlamoqda...</div>`
+              :""
+            }
+
+          </div>
+
+          <form class="ai-composer" id="aiForm">
+
+            <textarea
+              id="aiInput"
+              maxlength="1800"
+              placeholder="Savolingizni shu yerga yozing..."
+              required
+              ${aiBusy ? "disabled" : ""}
+            ></textarea>
+
+            <div class="ai-send-row">
+
+              <small>1800 belgigacha</small>
+
+              <button
+                class="btn gold ai-send-btn"
+                id="aiSendBtn"
+                type="submit"
+                ${aiBusy ? "disabled" : ""}
+              >
+                ${aiBusy ? "Kutilmoqda..." : "Yuborish ➤"}
+              </button>
+
+            </div>
+
+          </form>
+
+        </div>
+
+        <div class="ai-quick">
+
+          <button type="button" data-ai-prompt="Matematikadan kasrlarni sodda tushuntirib ber.">
+            ➗ Matemатика
+          </button>
+
+          <button type="button" data-ai-prompt="Ingliz tilida zamonlarni tushuntirib ber.">
+            🇬🇧 Ingliz tili
+          </button>
+
+          <button type="button" data-ai-prompt="Fizikadagi kuch va harakat mavzusini tushuntirib ber.">
+            ⚛️ Fizika
+          </button>
+
+          <button type="button" data-ai-prompt="Menga 5 ta matematika mashqi tuzib ber. Javoblarini darhol ko‘rsatma.">
+            📝 Mashqlar
+          </button>
+
+        </div>
+
+        <div class="ai-warning">
+          📌 AI Ustozning javoblari yordamchi ma'lumot hisoblanadi.
+          Muhim topshiriqlarda yechimni darslik yoki ustoz bilan ham tekshiring.
+        </div>
+
+      </div>
+    `;
+
+    const messages = $("aiMessages");
+
+    if(messages){
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    $("aiForm").addEventListener("submit", async event=>{
+
+      event.preventDefault();
+
+      const input = $("aiInput");
+
+      await aiSend(input.value);
+
+    });
+
+    $("aiClearBtn").addEventListener("click",()=>{
+
+      if(aiBusy)return;
+
+      aiMessages = [];
+
+      aiRenderPage();
+
+    });
+
+    page.querySelectorAll("[data-ai-prompt]").forEach(button=>{
+
+      button.addEventListener("click",()=>{
+
+        if(aiBusy)return;
+
+        aiSend(button.dataset.aiPrompt);
+
+      });
+
+    });
+
+  }
+
+  /* SUHBAT TARIXINI QISQA KONTEXTGA AYLANTIRISH */
+
+  function aiBuildMessage(newQuestion){
+
+    const previous = aiMessages
+      .slice(0,-1)
+      .slice(-6)
+      .map(item=>
+        (item.role==="user"?"O‘quvchi: ":"AI Ustoz: ")+
+        item.content
+      )
+      .join("\n");
+
+    if(!previous){
+      return newQuestion;
+    }
+
+    const prefix =
+      "Oldingi suhbatdan qisqa kontekst:\n";
+
+    const suffix =
+      "\n\nYangi savol: "+newQuestion;
+
+    const available = 1800-prefix.length-suffix.length;
+
+    if(available<=0){
+      return newQuestion;
+    }
+
+    const context = previous.slice(-available);
+
+    return prefix+context+suffix;
+
+  }
+
+  /* SERVERDAN XATOLIK MATNINI OLISH */
+
+  async function aiReadError(error){
+
+    try{
+
+      if(error?.context?.json){
+
+        const detail=await error.context.json();
+
+        if(detail?.error){
+          return detail.error;
+        }
+
+      }
+
+    }catch(e){
+
+      console.warn("AI xatolik tafsilotini o‘qib bo‘lmadi.");
+
+    }
+
+    return error?.message||"AI Ustozga ulanishda xatolik.";
+
+  }
+
+  /* AI'GA SAVOL YUBORISH */
+
+  async function aiSend(rawMessage){
+
+    if(aiBusy)return;
+
+    const message=String(rawMessage||"").trim();
+
+    if(!message){
+      toast("Avval savol yozing.");
+      return;
+    }
+
+    if(message.length>1800){
+      toast("Savol 1800 belgidan oshmasligi kerak.");
+      return;
+    }
+
+    if(!db||!user){
+      toast("Avval EduLife akkauntingizga kiring.");
+      return;
+    }
+
+    aiMessages.push({
+      role:"user",
+      content:message
+    });
+
+    aiBusy=true;
+
+    const requestMessage=aiBuildMessage(message);
+
+    aiRenderPage();
+
+    try{
+
+      const {data,error}=await db.functions.invoke(
+        "ai-tutor",
+        {
+          body:{
+            message:requestMessage
+          }
+        }
+      );
+
+      if(error){
+
+        const errorMessage=await aiReadError(error);
+
+        throw new Error(errorMessage);
+
+      }
+
+      if(!data?.success||!data?.answer){
+
+        throw new Error(
+          data?.error||"AI javobi olinmadi."
+        );
+
+      }
+
+      aiMessages.push({
+        role:"assistant",
+        content:String(data.answer)
+      });
+
+    }catch(error){
+
+      console.error("AI USTOZ XATOSI:",error);
+
+      aiMessages.push({
+        role:"assistant",
+        content:"⚠️ "+(
+          error?.message||
+          "AI Ustoz bilan bog‘lanib bo‘lmadi. Internetni tekshiring."
+        )
+      });
+
+    }finally{
+
+      aiBusy=false;
+
+      aiRenderPage();
+
+    }
+
+  }
+
+  /* MENYUGA QO‘SHISH */
+
+  window.buildNav=function(){
+
+    aiPreviousBuildNav();
+
+    const nav=$("nav");
+
+    if(!nav)return;
+
+    if(nav.querySelector('[data-page="ai-tutor"]'))return;
+
+    const button=document.createElement("button");
+
+    button.type="button";
+    button.dataset.page="ai-tutor";
+    button.className=currentPage==="ai-tutor"?"active":"";
+    button.innerHTML="🎓 &nbsp; AI Ustoz";
+
+    button.addEventListener("click",()=>{
+
+      window.go("ai-tutor");
+
+    });
+
+    nav.appendChild(button);
+
+  };
+
+  /* SAHIFANI OCHISH */
+
+  window.go=async function(page){
+
+    if(page!=="ai-tutor"){
+
+      return aiPreviousGo(page);
+
+    }
+
+    currentPage="ai-tutor";
+
+    $("sidebar").classList.remove("open");
+
+    buildNav();
+
+    aiRenderPage();
+
+  };
+
+  /* CHIQQANDA SUHBATNI TOZALASH */
+
+  window.logout=async function(){
+
+    aiMessages=[];
+
+    aiBusy=false;
+
+    return aiPreviousLogout();
+
+  };
+
+})();
 </script>
 </body>
 </html>
 
+</body>
+</html>
