@@ -2429,6 +2429,183 @@ async function start(){
 start();
 
 </script>
+ <!-- EDULIFE PREMIUM BUYURTMALARI -->
+<style>
+#edulife-premium {
+    background: #101a2d;
+    color: #fff;
+    padding: 20px;
+    border-radius: 18px;
+    margin: 20px 0;
+    font-family: Arial, sans-serif;
+}
+
+#edulife-premium h2 {
+    text-align: center;
+    margin-top: 0;
+}
+
+.el-plan {
+    background: #1b2942;
+    border: 1px solid #344968;
+    border-radius: 14px;
+    padding: 17px;
+    margin-top: 13px;
+}
+
+.el-plan h3 {
+    margin: 0 0 8px;
+}
+
+.el-price {
+    font-size: 23px;
+    font-weight: bold;
+    color: #55d6a3;
+    margin: 10px 0;
+}
+
+.el-plan button {
+    width: 100%;
+    padding: 13px;
+    margin-top: 10px;
+    border: 0;
+    border-radius: 10px;
+    background: #2878ed;
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.el-plan button:disabled {
+    opacity: .6;
+}
+
+#el-premium-status {
+    text-align: center;
+    margin-top: 15px;
+    line-height: 1.5;
+    color: #a9c8ff;
+}
+</style>
+
+<section id="edulife-premium">
+    <h2>⭐ EduLife tariflari</h2>
+
+    <div class="el-plan">
+        <h3>Oddiy xizmatlar</h3>
+        <div class="el-price">5 000 so‘m</div>
+        <p>Oddiy xizmatlar uchun tarif.</p>
+    </div>
+
+    <div class="el-plan">
+        <h3>💎 Premium — oylik</h3>
+        <div class="el-price">20 000 so‘m</div>
+        <p>Premium imkoniyatlaridan bir oy foydalanish.</p>
+        <button type="button" data-el-plan="monthly">
+            Oylik Premium so‘rash
+        </button>
+    </div>
+
+    <div class="el-plan">
+        <h3>👑 Premium — yillik</h3>
+        <div class="el-price">80 000 so‘m</div>
+        <p>Premium imkoniyatlaridan bir yil foydalanish.</p>
+        <button type="button" data-el-plan="yearly">
+            Yillik Premium so‘rash
+        </button>
+    </div>
+
+    <p id="el-premium-status">
+        Tarifni tanlang. Arizangiz adminga yuboriladi.
+    </p>
+    <p style="font-size:12px;color:#91a4c1;text-align:center">
+        Karta ma’lumotlari, CVV va SMS-kodlar bu yerda so‘ralmaydi.
+    </p>
+</section>
+
+<script>
+(function () {
+    const box = document.getElementById("edulife-premium");
+    const status = document.getElementById("el-premium-status");
+
+    let db = null;
+
+    try {
+        if (typeof supabase !== "undefined" &&
+            supabase && typeof supabase.from === "function") {
+            db = supabase;
+        } else if (window.edulifeSupabase &&
+                   typeof window.edulifeSupabase.from === "function") {
+            db = window.edulifeSupabase;
+        }
+    } catch (e) {}
+
+    box.querySelectorAll("[data-el-plan]").forEach(button => {
+        button.addEventListener("click", async function () {
+            if (!db) {
+                status.textContent =
+                    "Supabase ulanishi topilmadi. Mavjud Supabase client nomini tekshirish kerak.";
+                return;
+            }
+
+            const plan = this.dataset.elPlan;
+            const buttons = box.querySelectorAll("button");
+
+            buttons.forEach(b => b.disabled = true);
+            status.textContent = "Ariza yuborilmoqda...";
+
+            try {
+                const { data, error: authError } =
+                    await db.auth.getUser();
+
+                if (authError || !data.user) {
+                    status.textContent =
+                        "Avval EduLife hisobingizga kiring.";
+                    return;
+                }
+
+                const user = data.user;
+
+                const { data: pending, error: checkError } =
+                    await db.from("premium_requests")
+                    .select("id")
+                    .eq("user_id", user.id)
+                    .eq("status", "pending")
+                    .limit(1);
+
+                if (checkError) throw checkError;
+
+                if (pending && pending.length > 0) {
+                    status.textContent =
+                        "Sizda allaqachon ko‘rib chiqilayotgan ariza bor.";
+                    return;
+                }
+
+                const { error } = await db
+                    .from("premium_requests")
+                    .insert({
+                        user_id: user.id,
+                        plan: plan
+                    });
+
+                if (error) throw error;
+
+                status.textContent =
+                    "✅ Arizangiz adminga yuborildi! Admin tekshirganidan keyin Premium faollashtiriladi.";
+
+            } catch (error) {
+                console.error("Premium request:", error);
+                status.textContent =
+                    "Xatolik yuz berdi: " +
+                    (error.message || "Ariza yuborilmadi.");
+            } finally {
+                buttons.forEach(b => b.disabled = false);
+            }
+        });
+    });
+})();
+</script>
 </body>
 </html>
 
