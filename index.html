@@ -1,0 +1,1836 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080e1b">
+
+<title>EduLife — O‘quvchilar uchun onlayn ta’lim platformasi</title>
+<meta name="description" content="EduLife — o‘quvchilar, o‘qituvchilar va ota-onalar uchun elektron kundalik va ta’lim platformasi. Baholar, davomat, dars jadvali, kurslar va uy vazifalarini bir joyda boshqaring.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://ibodilloyevsunnatjon-hub.github.io/">
+
+<meta property="og:type" content="website">
+<meta property="og:locale" content="uz_UZ">
+<meta property="og:site_name" content="EduLife">
+<meta property="og:title" content="EduLife — Onlayn ta’lim platformasi">
+<meta property="og:description" content="Baholar, davomat, dars jadvali, kurslar va uy vazifalari — barchasi EduLife’da.">
+<meta property="og:url" content="https://ibodilloyevsunnatjon-hub.github.io/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="EduLife — Onlayn ta’lim platformasi">
+<meta name="twitter:description" content="O‘quvchilar, o‘qituvchilar va ota-onalar uchun elektron kundalik va ta’lim platformasi.">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://www.gstatic.com/firebasejs/13.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/13.0.0/firebase-messaging-compat.js"></script>
+
+<style>
+:root{
+ --bg:#080e1b;--panel:#101b2d;--card:#142239;--line:#293a54;
+ --blue:#3979f6;--gold:#e6c16e;--text:#f2f5fb;--muted:#9aa9bf;
+ --green:#39c58b;--red:#ee6878;--input-bg:#0a1424;
+ --sidebar-bg:#0d1728;--topbar-bg:#0d1728;--item-bg:#0d192b;
+ --nav-text:#b7c4d7;
+}
+:root[data-theme="light"]{
+ color-scheme:light;--bg:#f2f5fb;--panel:#fff;--card:#fff;
+ --line:#dce3ef;--blue:#2868db;--gold:#a36b00;--text:#19263a;
+ --muted:#64748b;--green:#16875b;--red:#cf4055;
+ --input-bg:#fff;--sidebar-bg:#fff;--topbar-bg:#fff;
+ --item-bg:#f7f9fd;--nav-text:#40516b;
+}
+:root[data-theme="dark"]{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+#authScreen{
+ min-height:100vh;display:grid;place-items:center;padding:18px;
+ background:radial-gradient(circle at top,#20385c,var(--bg) 65%);
+}
+.auth-card{
+ width:100%;max-width:470px;background:var(--panel);
+ border:1px solid var(--line);border-radius:22px;padding:25px;
+ box-shadow:0 20px 70px #0008;
+}
+.logo{font-size:30px;font-weight:800}
+.logo span{color:var(--gold)}
+.auth-brand-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.auth-sub{color:var(--muted);line-height:1.5;margin:10px 0 24px}
+.muted{color:var(--muted)}
+.field{margin:13px 0}
+label{display:block;margin-bottom:7px;font-size:13px;color:var(--muted)}
+input,select,textarea{
+ width:100%;padding:12px;background:var(--input-bg);color:var(--text);
+ border:1px solid var(--line);border-radius:10px;outline:none;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--blue)}
+textarea{min-height:85px;resize:vertical}
+.btn{
+ padding:12px 16px;border:0;border-radius:10px;
+ background:var(--blue);color:white;font-weight:700;
+}
+.btn.gold{background:var(--gold);color:#172033}
+.btn.dark{background:#283a55;color:white}
+.btn.red{background:#923746;color:white}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.full{width:100%}
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:18px 0}
+.role-choice{
+ min-height:105px;background:#142943;border:1px solid var(--line);
+ border-radius:14px;color:white;padding:14px;text-align:center;
+}
+.role-choice .ico{font-size:27px;display:block;margin-bottom:9px}
+.role-choice.selected{border:2px solid var(--gold);background:#24354b}
+.small-btn{background:none;border:0;color:var(--gold);padding:10px 0}
+.theme-toggle{
+ display:inline-flex;align-items:center;justify-content:center;gap:6px;
+ padding:9px 12px;background:var(--card);color:var(--text);
+ border:1px solid var(--line);border-radius:10px;
+ font-size:12px;font-weight:700;white-space:nowrap;
+}
+.sidebar{
+ width:250px;position:fixed;inset:0 auto 0 0;background:var(--sidebar-bg);
+ border-right:1px solid var(--line);padding:20px 14px;overflow:auto;z-index:10;
+}
+.brand{padding:4px 12px 22px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.brand small{display:block;color:var(--muted);font-size:10px;letter-spacing:2px;margin-top:5px}
+.nav{display:flex;flex-direction:column;gap:5px}
+.nav button{
+ background:none;border:0;color:var(--nav-text);
+ text-align:left;padding:12px;border-radius:10px;
+}
+.nav button.active,.nav button:hover{background:#1a2d49;color:white}
+.nav button.active{border-left:3px solid var(--gold)}
+#app{display:none;min-height:100vh}
+.main{margin-left:250px;min-height:100vh}
+.topbar{
+ height:70px;position:sticky;top:0;z-index:5;background:var(--topbar-bg);
+ border-bottom:1px solid var(--line);display:flex;align-items:center;
+ justify-content:space-between;padding:0 27px;
+}
+.top-left{display:flex;align-items:center;gap:12px}
+.top-actions{display:flex;align-items:center;gap:12px}
+.topbar small{color:var(--muted)}
+.avatar{
+ width:39px;height:39px;border-radius:50%;background:var(--gold);
+ color:#15213a;display:grid;place-items:center;font-weight:bold;flex-shrink:0;
+}
+.menu-btn{
+ display:none;background:none;border:1px solid var(--line);
+ color:var(--text);border-radius:8px;padding:8px 11px;
+}
+.content{max-width:1250px;margin:auto;padding:27px}
+.page-head{
+ display:flex;justify-content:space-between;align-items:center;
+ gap:12px;flex-wrap:wrap;margin-bottom:20px;
+}
+.page-head h1{font-size:25px;margin:0 0 6px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.card{
+ background:var(--card);border:1px solid var(--line);
+ border-radius:15px;padding:17px;margin-bottom:15px;min-width:0;
+}
+.card h3{font-size:16px;margin:0 0 12px}
+.card p{line-height:1.5;color:var(--muted)}
+.stat{font-size:29px;color:var(--gold);font-weight:800;margin:10px 0}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.wide{grid-column:1/-1}
+.list{display:flex;flex-direction:column;gap:10px}
+.item{
+ background:var(--item-bg);border:1px solid var(--line);
+ border-radius:11px;padding:13px;overflow-wrap:anywhere;
+}
+.item strong{display:block;margin-bottom:7px}
+.item small{color:var(--muted)}
+.badge{
+ display:inline-block;padding:5px 9px;border-radius:20px;
+ background:#253e62;color:#d4e3ff;font-size:11px;
+}
+.badge.gold{background:#4b402b;color:var(--gold)}
+.badge.green{background:#164b3b;color:#83e4b9}
+.badge.red{background:#512b37;color:#ffabb5}
+.empty{
+ border:1px dashed var(--line);border-radius:12px;
+ text-align:center;padding:24px;color:var(--muted);
+}
+.notice{
+ padding:12px 14px;background:#2b2519;border:1px solid #705b30;
+ color:#f0d58e;border-radius:10px;line-height:1.5;
+ margin:12px 0;overflow-wrap:anywhere;
+}
+.table-wrap{overflow:auto}
+table{border-collapse:collapse;width:100%;min-width:450px}
+td,th{text-align:left;padding:11px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:top}
+th{color:var(--gold)}
+#toast{
+ display:none;position:fixed;z-index:30;bottom:20px;left:50%;
+ transform:translateX(-50%);padding:12px 17px;background:#223650;
+ color:white;border:1px solid #4a668e;border-radius:12px;
+ max-width:90%;width:max-content;box-shadow:0 8px 30px #0009;
+ line-height:1.5;overflow-wrap:anywhere;
+}
+.premium-hero{
+ background:linear-gradient(135deg,#172e50,#243d67);
+ border:1px solid var(--line);border-radius:16px;padding:22px;
+ color:white;margin-bottom:16px;
+}
+.premium-hero h2{margin:0 0 9px}
+.premium-hero p{color:#d0ddf0;line-height:1.6;font-size:13px}
+.premium-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.premium-plan{
+ border:1px solid var(--line);background:var(--card);
+ border-radius:15px;padding:17px;min-width:0;
+}
+.premium-plan.featured{border:2px solid var(--gold)}
+.premium-plan h3{margin:0 0 10px}
+.premium-price{color:var(--gold);font-size:25px;font-weight:800;margin:12px 0}
+.premium-plan p{color:var(--muted);font-size:12px;line-height:1.6}
+.premium-status{
+ border:1px solid var(--line);border-radius:12px;
+ padding:14px;margin:14px 0;background:var(--item-bg);line-height:1.7;
+}
+.premium-feature-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.premium-feature{
+ border:1px solid var(--line);background:var(--item-bg);
+ border-radius:10px;padding:12px;font-size:13px;
+}
+.grade-score{
+ display:inline-flex;justify-content:center;align-items:center;
+ min-width:55px;padding:7px 12px;border-radius:9px;
+ font-weight:800;font-size:17px;
+}
+.grade-red{background:#512b37;color:#ffabb5}
+.grade-orange{background:#563b21;color:#ffc58a}
+.grade-blue{background:#253e62;color:#a9caff}
+.grade-green{background:#164b3b;color:#83e4b9}
+:root[data-theme="light"] .grade-red{background:#ffe6e9;color:#a52d42}
+:root[data-theme="light"] .grade-orange{background:#fff0df;color:#a65300}
+:root[data-theme="light"] .grade-blue{background:#e6efff;color:#2457a6}
+:root[data-theme="light"] .grade-green{background:#dcf7e9;color:#146c49}
+.stats-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.stats-box{background:var(--item-bg);border:1px solid var(--line);border-radius:13px;padding:15px}
+.stats-box .number{font-size:27px;font-weight:800;color:var(--gold);margin-top:9px}
+.stats-box small{color:var(--muted)}
+.stats-course{background:var(--item-bg);border:1px solid var(--line);border-radius:13px;padding:16px;margin-bottom:12px}
+.stats-row{display:grid;grid-template-columns:75px minmax(0,1fr) 45px;gap:9px;align-items:center;margin:12px 0;font-size:12px}
+.stats-track{background:var(--line);height:12px;border-radius:20px;overflow:hidden}
+.stats-fill{height:100%;border-radius:20px;background:var(--blue)}
+.stats-fill.old{background:#8492a8}
+.stats-change{padding:7px 10px;border-radius:8px;display:inline-block;font-size:12px;font-weight:bold}
+.stats-change.up{background:#164b3b;color:#83e4b9}
+.stats-change.down{background:#512b37;color:#ffabb5}
+.stats-change.same{background:#253e62;color:#d4e3ff}
+.stats-hint{font-size:12px;color:var(--muted);line-height:1.6}
+.achievement-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.achievement-card{background:var(--item-bg);border:1px solid var(--line);border-radius:15px;padding:16px}
+.achievement-card.locked{opacity:.65}
+.achievement-icon{font-size:38px;margin-bottom:10px}
+.achievement-card h3{margin:0 0 7px;font-size:16px}
+.achievement-card p{color:var(--muted);font-size:13px;line-height:1.5}
+.achievement-progress{height:9px;background:var(--line);border-radius:20px;overflow:hidden;margin:12px 0 7px}
+.achievement-progress-fill{height:100%;background:var(--blue);border-radius:20px}
+.achievement-status{font-size:12px;font-weight:bold;color:var(--gold)}
+.calendar-toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.calendar-month{font-weight:800;font-size:18px;text-transform:capitalize}
+.calendar-actions{display:flex;gap:7px}
+.calendar-actions button{border:1px solid var(--line);color:var(--text);background:var(--card);padding:9px 12px;border-radius:9px}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.calendar-weekday{text-align:center;padding:8px 2px;font-size:11px;color:var(--muted);font-weight:bold}
+.calendar-day{min-width:0;min-height:65px;border:1px solid var(--line);border-radius:9px;background:var(--item-bg);color:var(--text);padding:7px 3px;text-align:center}
+.calendar-day.outside{opacity:.35}
+.calendar-day.today{border:2px solid var(--blue)}
+.calendar-day.selected{background:var(--blue);color:white;border-color:var(--blue)}
+.calendar-dots{display:flex;justify-content:center;flex-wrap:wrap;gap:3px;margin-top:9px}
+.calendar-dot{width:7px;height:7px;border-radius:50%;background:var(--blue)}
+.calendar-dot.exam{background:#e65b72}
+.calendar-dot.test{background:#e6c16e}
+.calendar-dot.homework{background:#3979f6}
+.calendar-dot.reminder{background:#39c58b}
+.calendar-dot.lesson{background:#9a80e8}
+.calendar-event{display:flex;gap:12px;align-items:flex-start;background:var(--item-bg);border:1px solid var(--line);border-radius:11px;padding:13px;margin:9px 0}
+.calendar-event-icon{font-size:25px}
+.calendar-event-content{min-width:0;flex:1}
+.calendar-event-content strong{display:block;margin-bottom:5px}
+.calendar-event-content p{color:var(--muted);font-size:13px;line-height:1.5}
+.calendar-type{display:inline-block;font-size:10px;padding:4px 8px;border-radius:20px;background:var(--line);margin-top:6px}
+.goal-card{background:var(--item-bg);border:1px solid var(--line);border-radius:13px;padding:16px;margin-bottom:12px}
+.goal-progress{background:var(--line);height:13px;border-radius:20px;overflow:hidden;margin:15px 0 9px}
+.goal-progress-fill{height:100%;background:var(--blue);border-radius:20px}
+.goal-progress-fill.complete{background:var(--green)}
+.ai-layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:14px}
+.ai-history{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:13px}
+.ai-history-list{display:flex;flex-direction:column;gap:7px;max-height:420px;overflow:auto}
+.ai-history-item{display:flex;gap:5px;background:var(--item-bg);border:1px solid var(--line);border-radius:10px;padding:5px}
+.ai-history-item.active{border-color:var(--blue)}
+.ai-history-open{flex:1;min-width:0;background:none;border:0;color:var(--text);text-align:left;padding:8px}
+.ai-history-open strong{display:block;font-size:12px;overflow-wrap:anywhere}
+.ai-history-open small{display:block;color:var(--muted);font-size:10px;margin-top:6px}
+.ai-history-delete{border:0;background:transparent;color:var(--red);padding:7px}
+.ai-chat{background:var(--panel);border:1px solid var(--line);border-radius:15px;overflow:hidden;min-width:0}
+.ai-chat-head{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);gap:10px}
+.ai-messages{padding:15px;min-height:260px;max-height:480px;overflow:auto;display:flex;flex-direction:column;gap:13px}
+.ai-message{display:flex;gap:9px;max-width:95%;align-items:flex-start}
+.ai-message.user{align-self:flex-end;flex-direction:row-reverse}
+.ai-message-icon{width:33px;height:33px;border-radius:50%;background:#253d60;display:grid;place-items:center;flex-shrink:0}
+.ai-bubble{background:var(--item-bg);border:1px solid var(--line);border-radius:13px;padding:11px 13px;font-size:13px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+.ai-message.user .ai-bubble{background:#1c3b66;color:white}
+.ai-composer{border-top:1px solid var(--line);padding:13px;display:flex;flex-direction:column;gap:9px}
+.ai-composer textarea{min-height:75px;max-height:160px}
+.ai-send-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ai-quick{display:flex;flex-wrap:wrap;gap:8px;margin-top:13px}
+.ai-quick button{border:1px solid var(--line);border-radius:20px;background:var(--card);color:var(--text);padding:9px 12px;font-size:12px}
+.ai-warning{background:var(--item-bg);border:1px solid var(--line);padding:12px;border-radius:10px;font-size:12px;color:var(--muted);line-height:1.6;margin-top:13px}
+.ai-clear{border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--muted);padding:8px 10px;font-size:11px}
+.payment-request{background:var(--item-bg);border:1px solid var(--line);border-radius:13px;padding:16px;margin:12px 0;overflow-wrap:anywhere}
+.payment-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
+.payment-actions button{flex:1;min-width:120px}
+.payment-info{border:1px solid var(--line);background:var(--item-bg);border-radius:12px;padding:13px;margin:12px 0;line-height:1.7}
+:root[data-theme="light"] #authScreen{background:radial-gradient(circle at top,#dceaff,var(--bg) 65%)}
+:root[data-theme="light"] .auth-card{box-shadow:0 15px 50px #263b5b18}
+:root[data-theme="light"] .role-choice{background:#f1f5fb;color:#20304a}
+:root[data-theme="light"] .role-choice.selected{background:#fff6df;border-color:var(--gold)}
+:root[data-theme="light"] .nav button.active,:root[data-theme="light"] .nav button:hover{background:#e9effa;color:#19345f}
+:root[data-theme="light"] .notice{background:#fff6df;border-color:#e5c778;color:#76520c}
+:root[data-theme="light"] .badge{background:#e8effb;color:#234d91}
+:root[data-theme="light"] .badge.gold{background:#fff3d5;color:#825600}
+:root[data-theme="light"] .badge.green{background:#dcf7e9;color:#146c49}
+:root[data-theme="light"] .badge.red{background:#ffe6e9;color:#a52d42}
+:root[data-theme="light"] #toast{background:#fff;color:#19263a;border-color:#dce3ef}
+:root[data-theme="light"] .btn.dark{background:#e1e8f2;color:#1b2d48}
+@media(max-width:950px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.stats-overview{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){
+ .sidebar{transform:translateX(-105%);transition:.25s;width:260px;box-shadow:12px 0 35px #0009}
+ .sidebar.open{transform:translateX(0)}.main{margin-left:0}.menu-btn{display:block}
+ .topbar{height:62px;padding:0 13px}.content{padding:18px 13px}
+ .two{grid-template-columns:1fr}.card{padding:14px}
+ .page-head h1{font-size:22px}.theme-toggle{padding:8px;font-size:11px}
+ .top-actions{gap:7px}.ai-layout{grid-template-columns:1fr}
+ .ai-history-list{max-height:190px}.premium-grid{grid-template-columns:1fr}
+}
+@media(max-width:600px){.stats-row{grid-template-columns:60px minmax(0,1fr) 40px;gap:6px}}
+@media(max-width:450px){.achievement-grid{grid-template-columns:1fr}.premium-feature-list{grid-template-columns:1fr}.premium-hero{padding:16px}}
+@media(max-width:390px){
+ .grid,.form-grid{grid-template-columns:1fr}.wide{grid-column:auto}
+ .topbar{padding:0 9px}.top-left{gap:7px}.topbar strong{font-size:14px}
+ .theme-toggle{font-size:10px;padding:7px}.avatar{width:34px;height:34px}
+}
+</style>
+</head>
+  <body>
+<div id="authScreen">
+ <div class="auth-card">
+  <div class="auth-brand-row">
+   <div class="logo">Edu<span>Life</span> ✦</div>
+   <button class="theme-toggle" type="button" onclick="toggleTheme()">☀️ Yorug‘ rejim</button>
+  </div>
+  <p class="auth-sub">Elektron kundalik — ta'lim, baholar va natijalar bir joyda.</p>
+  <div id="rolePicker">
+   <h3>Kim sifatida kirasiz?</h3>
+   <div class="role-grid">
+    <button type="button" class="role-choice" data-role="student"><span class="ico">🎓</span>O'quvchi</button>
+    <button type="button" class="role-choice" data-role="teacher"><span class="ico">📚</span>Ustoz</button>
+    <button type="button" class="role-choice" data-role="parent"><span class="ico">👨‍👩‍👧</span>Ota-ona</button>
+    <button type="button" class="role-choice" data-role="admin"><span class="ico">🛡️</span>Admin</button>
+   </div>
+  </div>
+  <div id="loginPanel" class="hidden">
+   <span class="badge gold" id="selectedRoleLabel"></span>
+   <h3 style="margin-top:15px">Tizimga kirish</h3>
+   <form id="loginForm">
+    <div class="field"><label>Login</label><input id="loginName" required autocomplete="username" placeholder="Sizga berilgan login"></div>
+    <div class="field"><label>Parol</label><input id="loginPassword" type="password" required autocomplete="current-password" placeholder="Parolingiz"></div>
+    <button type="submit" class="btn gold full" id="loginButton">Kirish</button>
+   </form>
+   <button class="small-btn" type="button" onclick="backToRoles()">← Rollarni tanlashga qaytish</button>
+   <p class="muted" style="font-size:12px" id="loginHint"></p>
+  </div>
+ </div>
+</div>
+
+<div id="app">
+ <aside class="sidebar" id="sidebar">
+  <div class="brand">
+   <div class="logo">Edu<span>Life</span> ✦</div>
+   <small>SMART EDUCATION PLATFORM</small>
+  </div>
+  <nav class="nav" id="nav"></nav>
+  <div style="border-top:1px solid var(--line);margin-top:18px;padding-top:15px">
+   <button class="btn dark full" type="button" onclick="logout()">Chiqish ⟵</button>
+  </div>
+ </aside>
+ <main class="main">
+  <header class="topbar">
+   <div class="top-left">
+    <button class="menu-btn" type="button" onclick="toggleMenu()">☰</button>
+    <div><strong id="topName">EduLife</strong><br><small id="topRole">Yuklanmoqda...</small></div>
+   </div>
+   <div class="top-actions">
+    <button class="theme-toggle" type="button" onclick="toggleTheme()">☀️ Yorug‘ rejim</button>
+    <div class="avatar" id="avatar">E</div>
+   </div>
+  </header>
+  <section class="content" id="page"></section>
+ </main>
+</div>
+<div id="toast"></div>
+
+<script>
+/* SOZLAMALAR */
+const SUPABASE_URL="https://nqunhvbiiukqfswsntpf.supabase.co";
+const SUPABASE_KEY="sb_publishable_M7rhjIqZ8rFNxUKurGb4pQ_A6MF0Get";
+
+const FIREBASE_CONFIG={
+ apiKey:"AIzaSyD1hJsCmk_7AfhnFA-jjwK4CA1pFnHA7Ks",
+ authDomain:"edulife-a774f.firebaseapp.com",
+ projectId:"edulife-a774f",
+ storageBucket:"edulife-a774f.firebasestorage.app",
+ messagingSenderId:"92661505128",
+ appId:"1:92661505128:web:7aeb0cbcb25bed59ceefdd"
+};
+const FIREBASE_VAPID_KEY="BOT0xJybOmDsY70AZb_uMbBQKweon9npPcmE9Ng8HwMBqN5JvXILBN9K2lrONI1hr92PHX4G6_6DjdN3N3AStZwE";
+
+/* UZUM BANK TO‘LOV SOZLAMALARI
+   Karta raqami va karta egasining ismini shu yerga kiriting.
+   Faqat karta raqami va egasining ismi kerak; PIN, CVV yoki SMS-kod emas.
+   Karta egasining ruxsati bilan, ota-ona/vasiy nazoratida foydalaning. */
+const UZUM_PAYMENT_CARD="4916 9903 4251 2651";
+const UZUM_PAYMENT_HOLDER="UMED SAYFILLOEV";
+const PAYMENT_RECEIPTS_BUCKET="payment-receipts";
+const PAYMENT_MAX_RECEIPT_BYTES=5*1024*1024;
+
+let db=null,user=null,profile=null;
+let selectedRole=null,activeRole=null,currentPage="dashboard";
+let lastIssued=null,firebaseMessaging=null,firebaseForegroundListenerAdded=false;
+let premiumSubscription=null,premiumActive=false,basicActive=false;
+let paymentAdminActive=false,premiumCheckedAt=0,premiumChecking=false;
+let aiMessages=[],aiChats=[],aiCurrentChatId=null,aiBusy=false,aiLoading=false;
+let calendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+let calendarSelected=dateKey(new Date()),calendarEvents=[],calendarCourses=[];
+
+const $=id=>document.getElementById(id);
+const premiumPages=["statistics","achievements","pdf-report","calendar","personal-goals","ai-tutor"];
+const baseNav=[
+ ["dashboard","⌂","Bosh sahifa"],["courses","▣","Kurslar"],
+ ["grades","★","Baholar"],["attendance","✓","Davomat"],
+ ["assignments","✎","Uy vazifalari"],["comments","☰","Izohlar"],
+ ["messages","✉","Xabarlar"],["schedule","▦","Dars jadvali"],
+ ["profile","◉","Profil"]
+];
+
+/* TEMA */
+function applyTheme(theme){
+ const selected=theme==="light"?"light":"dark";
+ document.documentElement.setAttribute("data-theme",selected);
+ try{localStorage.setItem("edulife_theme",selected)}catch(e){}
+ document.querySelectorAll(".theme-toggle").forEach(b=>{
+  b.textContent=selected==="dark"?"☀️ Yorug‘ rejim":"🌙 Qorong‘i rejim";
+ });
+ const meta=document.querySelector('meta[name="theme-color"]');
+ if(meta)meta.content=selected==="dark"?"#080e1b":"#f2f5fb";
+}
+function toggleTheme(){
+ const current=document.documentElement.getAttribute("data-theme")||"dark";
+ const next=current==="dark"?"light":"dark";
+ applyTheme(next);toast(next==="light"?"☀️ Yorug‘ rejim yoqildi":"🌙 Qorong‘i rejim yoqildi");
+}
+function loadTheme(){try{applyTheme(localStorage.getItem("edulife_theme")||"dark")}catch(e){applyTheme("dark")}}
+loadTheme();
+
+/* YORDAMCHI */
+function esc(v){
+ return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function toast(msg){
+ const el=$("toast");el.textContent=msg;el.style.display="block";
+ clearTimeout(window.toastTimer);
+ window.toastTimer=setTimeout(()=>el.style.display="none",7000);
+}
+function fail(e){console.error("EduLife:",e);toast(e?.message||"Xatolik yuz berdi.")}
+function roleName(r){return ({student:"O'quvchi",teacher:"Ustoz",parent:"Ota-ona",admin:"Maktab administratori"})[r]||r||"Foydalanuvchi"}
+function dateText(v){return v?new Date(v).toLocaleString("uz-UZ",{dateStyle:"medium",timeStyle:"short"}):"—"}
+function dateKey(value){
+ const d=new Date(value);
+ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function dateFromKey(key,time="15:00"){
+ const [y,m,d]=key.split("-").map(Number),[h,min]=time.split(":").map(Number);
+ return new Date(y,m-1,d,h||0,min||0);
+}
+function empty(v="Hozircha ma'lumot yo'q"){return `<div class="empty">${esc(v)}</div>`}
+function makeNameMap(people){return Object.fromEntries((people||[]).map(p=>[p.id,p.full_name||roleName(p.role)]))}
+function personName(id,map){return id?(map?.[id]||"Foydalanuvchi"):"—"}
+function makeCourseMap(courses){return Object.fromEntries((courses||[]).map(c=>[c.id,c.title||"Kurs"]))}
+function courseName(id,map){return id?(map?.[id]||"Kurs nomi topilmadi"):"—"}
+function isTeacher(){return activeRole==="teacher"||activeRole==="admin"}
+function isAdmin(){return activeRole==="admin"}
+function isPlatformAdmin(){return String(profile?.role||"").toLowerCase()==="admin"}
+async function rows(table,columns="*"){
+ const {data,error}=await db.from(table).select(columns);
+ if(error)throw error;return data||[];
+}
+async function countRows(table){
+ const {count,error}=await db.from(table).select("*",{count:"exact",head:true});
+ if(error)throw error;return count||0;
+}
+function statCard(title,value,icon){return `<div class="card"><div class="muted">${icon} ${esc(title)}</div><div class="stat">${value}</div></div>`}
+function field(name,label,placeholder="",type="text"){return `<div><label>${esc(label)}</label><input name="${esc(name)}" type="${esc(type)}" placeholder="${esc(placeholder)}" required></div>`}
+function selectField(name,label,items,placeholder){
+ return `<div><label>${esc(label)}</label><select name="${esc(name)}" required><option value="">${esc(placeholder||"Tanlang")}</option>${items.map(x=>`<option value="${esc(x.value)}">${esc(x.label)}</option>`).join("")}</select></div>`;
+}
+function gradeColor(value){
+ const n=Number(value);if(n<=4)return "grade-red";if(n<=6)return "grade-orange";if(n<=8)return "grade-blue";return "grade-green";
+}
+function gradeBadge(value){return `<span class="grade-score ${gradeColor(value)}">${Number(value).toFixed(Number(value)%1?1:0)}/10</span>`}
+
+/* TARIF HUQUQLARINI TEKSHIRISH */
+async function refreshAccess(force=false){
+ if(!db||!user){
+  premiumSubscription=null;premiumActive=false;basicActive=false;paymentAdminActive=false;
+  return;
+ }
+ if(!force&&Date.now()-premiumCheckedAt<15000)return;
+
+ if(isPlatformAdmin()){
+  premiumActive=true;basicActive=true;
+ }else{
+  const {data,error}=await db.from("premium_subscriptions")
+   .select("user_id,plan,expires_at,basic_active")
+   .eq("user_id",user.id).maybeSingle();
+  if(error)throw error;
+
+  premiumSubscription=data||null;
+  const expiry=data?.expires_at?new Date(data.expires_at).getTime():null;
+
+  premiumActive=Boolean(
+   data&&["monthly","yearly"].includes(data.plan)&&
+   expiry!==null&&expiry>Date.now()
+  );
+
+  basicActive=Boolean(
+   data&&(
+    data.basic_active===true||
+    (data.plan==="basic"&&(expiry===null||expiry>Date.now()))
+       )
+  );
+ }
+
+ /* To‘lov administratori — maktab adminidan mustaqil */
+ try{
+  const {data,error}=await db.from("payment_admins")
+   .select("user_id").eq("user_id",user.id).maybeSingle();
+  if(error)throw error;
+  paymentAdminActive=Boolean(data);
+ }catch(e){
+  console.warn("To‘lov adminini tekshirish:",e.message);
+  paymentAdminActive=false;
+ }
+
+ premiumCheckedAt=Date.now();
+}
+
+async function premiumHasAccess(force=false){
+ await refreshAccess(force);
+ return premiumActive||isPlatformAdmin();
+}
+async function baseHasAccess(force=false){
+ await refreshAccess(force);
+ return basicActive||premiumActive||isPlatformAdmin();
+}
+function premiumDate(value){
+ if(!value)return "—";
+ const d=new Date(value);if(Number.isNaN(d.getTime()))return "—";
+ return d.toLocaleDateString("uz-UZ",{day:"numeric",month:"long",year:"numeric"});
+}
+function planName(plan){
+ return ({basic:"Basic",monthly:"Premium oylik",yearly:"Premium yillik"})[plan]||plan;
+}
+function planPrice(plan){
+ return ({basic:"5 000 so‘m",monthly:"20 000 so‘m",yearly:"80 000 so‘m"})[plan]||"";
+}
+function premiumStatusHtml(){
+ if(isPlatformAdmin())return `<div class="premium-status">🛡️ <b>Maktab administratori</b><br>Barcha ta’lim xizmatlari ochiq.</div>`;
+ if(premiumActive)return `<div class="premium-status"><span class="badge green">✅ PREMIUM FAOL</span><p><b>${premiumSubscription.plan==="yearly"?"Yillik Premium":"Oylik Premium"}</b></p>Amal qilish muddati: <b>${esc(premiumDate(premiumSubscription.expires_at))}</b>${basicActive?"<br>Basic huquqi ham saqlangan.":""}</div>`;
+ if(basicActive)return `<div class="premium-status"><span class="badge green">✅ BASIC FAOL</span><p>Asosiy ta’lim xizmatlaringiz ochiq.</p>Premium imkoniyatlarini ham so‘rashingiz mumkin.</div>`;
+ return `<div class="premium-status"><span class="badge red">TARIF FAOL EMAS</span><p>Ta’lim bo‘limlarini ochish uchun avval Basic yoki Premium tarifini faollashtiring.</p></div>`;
+}
+  /* ROL TANLASH */
+document.querySelectorAll("[data-role]").forEach(button=>{
+ button.addEventListener("click",()=>chooseRole(button.dataset.role));
+});
+function chooseRole(role){
+ selectedRole=role;
+ document.querySelectorAll("[data-role]").forEach(b=>b.classList.toggle("selected",b.dataset.role===role));
+ $("rolePicker").classList.add("hidden");$("loginPanel").classList.remove("hidden");
+ $("selectedRoleLabel").textContent=roleName(role);
+ $("loginHint").textContent=role==="admin"?"Maktab administratorining login va paroli bilan kiring.":"Login va parolni administrator yoki ustoz bergan bo‘lishi kerak.";
+ $("loginName").placeholder=role==="admin"?"Admin emailingiz":"Sizga berilgan login";
+ $("loginName").value="";$("loginPassword").value="";$("loginName").focus();
+}
+function backToRoles(){
+ $("loginPanel").classList.add("hidden");$("rolePicker").classList.remove("hidden");
+ document.querySelectorAll("[data-role]").forEach(b=>b.classList.remove("selected"));
+ selectedRole=null;
+}
+
+/* LOGIN */
+$("loginForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ if(!db){toast("Supabase ulanmagan.");return}
+ if(!selectedRole){toast("Avval rolingizni tanlang.");return}
+ const button=$("loginButton");button.disabled=true;button.textContent="Tekshirilmoqda...";
+ try{
+  const login=$("loginName").value.trim(),password=$("loginPassword").value;
+  if(!login||!password)throw new Error("Login va parolni kiriting.");
+  const email=login.includes("@")?login.toLowerCase():login.toLowerCase()+"@login.edulife.invalid";
+  await db.auth.signOut();
+  const {data,error}=await db.auth.signInWithPassword({email,password});
+  if(error)throw new Error("Login xatosi: "+error.message);
+  if(!data?.user)throw new Error("Foydalanuvchi aniqlanmadi.");
+  await enterApp(data.user,selectedRole);
+ }catch(e){fail(e)}
+ finally{button.disabled=false;button.textContent="Kirish"}
+});
+
+/* ILOVAGA KIRISH */
+async function enterApp(authUser,chosenRole){
+ const {data:authData,error:authError}=await db.auth.getUser();
+ if(authError)throw authError;
+ const currentUser=authData?.user||authUser;
+ if(!currentUser?.id)throw new Error("Foydalanuvchi aniqlanmadi.");
+
+ const {data:p,error}=await db.from("profiles")
+  .select("id,full_name,role,username")
+  .eq("id",currentUser.id).maybeSingle();
+ if(error)throw error;if(!p)throw new Error("Profil topilmadi.");
+
+ const realRole=String(p.role||"").toLowerCase();
+ if(!realRole)throw new Error("Profil roli bo‘sh.");
+
+ if(realRole==="admin"){
+  if(!["admin","teacher","student"].includes(chosenRole))throw new Error("Maktab admini uchun bu ko‘rinish yopiq.");
+ }else if(realRole!==chosenRole){
+  await db.auth.signOut();
+  throw new Error("Tanlangan rol akkauntingizga mos emas. Haqiqiy rol: "+roleName(realRole));
+ }
+
+ user=currentUser;profile=p;activeRole=chosenRole;
+ premiumCheckedAt=0;
+ await refreshAccess(true);
+
+ $("authScreen").style.display="none";
+ $("app").style.display="block";
+ $("topName").textContent=profile.full_name||user.email;
+ $("topRole").textContent=roleName(activeRole)+(realRole==="admin"&&activeRole!=="admin"?" · Maktab admini ko‘rinishi":"");
+ $("avatar").textContent=(profile.full_name||"E").charAt(0).toUpperCase();
+
+ buildNav();
+
+ if(!(basicActive||premiumActive||isPlatformAdmin())){
+  await go("premium");
+ }else{
+  await go("dashboard");
+ }
+}
+
+/* CHIQISH */
+async function logout(){
+ try{await db.auth.signOut()}catch(e){console.error(e)}
+ user=null;profile=null;activeRole=null;selectedRole=null;
+ premiumSubscription=null;premiumActive=false;basicActive=false;
+ paymentAdminActive=false;premiumCheckedAt=0;
+ aiMessages=[];aiChats=[];aiCurrentChatId=null;
+ $("app").style.display="none";$("authScreen").style.display="grid";
+ $("loginPanel").classList.add("hidden");$("rolePicker").classList.remove("hidden");
+ toast("Tizimdan chiqdingiz.");
+}
+
+/* NAVIGATSIYA */
+function buildNav(){
+ const hasBase=basicActive||premiumActive||isPlatformAdmin();
+ let items=[];
+
+ if(hasBase){
+  items=[...baseNav];
+  if(isTeacher())items.splice(1,0,["accounts","♙","Akkauntlar"]);
+  if(isAdmin())items=items.filter(x=>["dashboard","accounts","statistics","profile"].includes(x[0]));
+  if(activeRole==="student"||activeRole==="parent")items.push(["achievements","🏆","Yutuqlar"]);
+  items.push(["pdf-report","📄","PDF hisobot"]);
+  items.push(["calendar","📅","Aqlli kalendar"]);
+  if(activeRole==="student")items.push(["personal-goals","🎯","Shaxsiy rivojlanish"]);
+  items.push(["ai-tutor","🎓","AI Ustoz"]);
+ }
+
+ items.push(["premium","💎","Tariflar"]);
+
+ if(paymentAdminActive)items.push(["payment-admin","💳","To‘lov boshqaruvi"]);
+
+ $("nav").innerHTML=items.map(([id,ico,title])=>{
+  const locked=premiumPages.includes(id)&&!premiumActive&&!isPlatformAdmin();
+  return `<button type="button" data-page="${id}" class="${id===currentPage?"active":""}">${ico} &nbsp; ${title}${locked?" 🔒":""}</button>`;
+ }).join("");
+
+ $("nav").querySelectorAll("[data-page]").forEach(b=>{
+  b.addEventListener("click",()=>go(b.dataset.page));
+ });
+}
+function toggleMenu(){$("sidebar").classList.toggle("open")}
+
+async function go(page){
+ $("sidebar").classList.remove("open");
+ try{
+  await refreshAccess();
+
+  if(page==="payment-admin"){
+   if(!paymentAdminActive){
+    toast("Bu bo‘lim faqat to‘lov administratoriga ochiq.");return;
+   }
+   currentPage="payment-admin";buildNav();
+   $("page").innerHTML='<div class="card">Yuklanmoqda...</div>';
+   await renderPaymentAdmin();return;
+  }
+
+  const hasBase=basicActive||premiumActive||isPlatformAdmin();
+  if(!hasBase&&page!=="premium"){
+   toast("Avval Basic yoki Premium tarifini faollashtiring.");
+   page="premium";
+  }
+
+  if(premiumPages.includes(page)&&!premiumActive&&!isPlatformAdmin()){
+   toast("🔒 Bu funksiya Premium tarifida mavjud.");
+   page="premium";
+  }
+
+  currentPage=page;buildNav();
+  $("page").innerHTML='<div class="card">Yuklanmoqda...</div>';
+
+  const map={
+   dashboard:renderDashboard,accounts:renderAccounts,courses:renderCourses,
+   grades:renderGrades,attendance:renderAttendance,assignments:renderAssignments,
+   comments:renderComments,messages:renderMessages,schedule:renderSchedule,
+   statistics:renderStatistics,profile:renderProfile,achievements:renderAchievements,
+   "pdf-report":renderPdfReports,calendar:renderCalendar,
+   "personal-goals":renderPersonalGoals,"ai-tutor":renderAITutor,
+   premium:renderPremium
+  };
+  if(!map[page])throw new Error("Bo‘lim topilmadi.");
+  await map[page]();
+ }catch(e){fail(e)}
+}
+
+/* TARIFLAR VA UZUM BANK TO‘LOV ARIZASI */
+async function renderPremium(){
+ await refreshAccess(true);
+
+ const pendingResult=await db.from("premium_requests")
+  .select("id,plan,status,created_at,receipt_path,payer_name,payment_reference")
+  .eq("user_id",user.id).eq("status","pending")
+  .order("created_at",{ascending:false}).limit(1);
+ if(pendingResult.error)throw pendingResult.error;
+ const pending=pendingResult.data?.[0]||null;
+
+ const pendingHtml=pending?`
+ <div class="notice">
+  ⏳ Sizning <b>${esc(planName(pending.plan))}</b> arizangiz ko‘rib chiqilmoqda.
+  <br>Ariza sanasi: ${esc(dateText(pending.created_at))}
+  <br>Chek: ${pending.receipt_path?"✅ yuborilgan":"⚠️ biriktirilmagan"}
+ </div>`:"";
+ const cardReady=UZUM_PAYMENT_CARD!=="KARTA_RAQAMINI_SHU_YERGA_KIRITING"&&String(UZUM_PAYMENT_CARD).trim().length>=16;
+ const cardHtml=cardReady?esc(UZUM_PAYMENT_CARD):"Karta raqami hali sozlanmagan";
+ const holderHtml=UZUM_PAYMENT_HOLDER!=="KARTA_EGASINING_ISM_FAMILIYASI"?esc(UZUM_PAYMENT_HOLDER):"Karta egasi ismi kiritilmagan";
+
+ $("page").innerHTML=`
+ <div class="page-head"><div><h1>💎 EduLife tariflari</h1><p class="muted">O‘zingizga mos tarifni tanlang.</p></div></div>
+ <div class="premium-hero">
+  <h2>EduLife tariflari ✦</h2>
+  <p>Ta’lim xizmatlari, baholar va natijalaringizni bir joyda boshqaring.</p>
+  ${premiumStatusHtml()}
+ </div>
+ ${pendingHtml}
+ <div class="premium-grid">
+  <div class="premium-plan">
+   <h3>📘 Basic</h3><div class="premium-price">5 000 so‘m</div>
+   <p>Kurslar, dars va kurs baholari, davomat, uy vazifalari, izohlar, xabarlar va dars jadvali.</p>
+   <button class="btn full" id="basicRequestBtn" ${basicActive||premiumActive||pending||!cardReady?"disabled":""}>
+    ${basicActive||premiumActive?"✅ Faol":"Basic uchun to‘lov"}
+   </button>
+  </div>
+  <div class="premium-plan featured">
+   <h3>💎 Premium — 1 oy</h3><div class="premium-price">20 000 so‘m</div>
+   <p>Asosiy xizmatlar va barcha Premium imkoniyatlari bir oy davomida.</p>
+   <button class="btn gold full" id="monthlyRequestBtn" ${pending||!cardReady?"disabled":""}>Oylik Premium uchun to‘lov</button>
+  </div>
+  <div class="premium-plan">
+   <h3>👑 Premium — 1 yil</h3><div class="premium-price">80 000 so‘m</div>
+   <p>Asosiy xizmatlar va barcha Premium imkoniyatlari bir yil davomida.</p>
+   <button class="btn gold full" id="yearlyRequestBtn" ${pending||!cardReady?"disabled":""}>Yillik Premium uchun to‘lov</button>
+  </div>
+ </div>
+ <div class="payment-info">
+  <b>💳 Uzum Bank orqali to‘lov</b><br>
+  <div style="margin-top:9px"><span class="muted">Karta raqami</span><br><strong id="uzumCardNumber" style="font-size:19px;letter-spacing:1px">${cardHtml}</strong></div>
+  <div style="margin-top:8px"><span class="muted">Karta egasi</span><br><b>${holderHtml}</b></div>
+  ${cardReady?'<button class="btn dark" type="button" id="copyUzumCard" style="margin-top:11px">📋 Karta raqamini nusxalash</button>':'<p class="notice">Karta raqamini koddagi UZUM_PAYMENT_CARD qatoriga, karta egasining ismini UZUM_PAYMENT_HOLDER qatoriga kiriting. Karta egasining roziligini oling.</p>'}
+  <p class="muted">Tarif summasini aynan o‘tkazing. Pul o‘tkazilgach, tegishli tarifni tanlab, chek rasmini yuboring. Bu qo‘lda tekshiriladigan o‘tkazma; Uzum Bank bilan avtomatik integratsiya emas.</p>
+ </div>
+ <div id="paymentSubmissionArea"></div>
+ <div class="card">
+  <h3>Premium xizmatlari</h3>
+  <div class="premium-feature-list">
+   <div class="premium-feature">🔔 Telefon bildirishnomalari</div>
+   <div class="premium-feature">🏆 Yutuqlar tizimi</div>
+   <div class="premium-feature">📊 Kengaytirilgan statistika</div>
+   <div class="premium-feature">📄 PDF hisobot</div>
+   <div class="premium-feature">📅 Aqlli kalendar</div>
+   <div class="premium-feature">🎯 Shaxsiy rivojlanish</div>
+   <div class="premium-feature">🎓 AI Ustoz</div>
+   <div class="premium-feature">☀️🌙 Dark va Light rejim — bepul</div>
+  </div>
+ </div>
+ <div class="notice">
+  PIN-kod, CVV va SMS-kod hech qachon kiritmang yoki yubormang. Chek rasmi maxfiy saqlanadi.
+  Ariza yuborilishi to‘lov tasdiqlandi degani emas. Tarif faqat administrator o‘tkazmani tekshirgandan keyin faollashadi.
+  To‘lovni ota-ona yoki vasiy roziligi va nazoratida amalga oshiring.
+ </div>`;
+
+ if(cardReady){
+  $("copyUzumCard").addEventListener("click",async()=>{
+   try{await navigator.clipboard.writeText(String(UZUM_PAYMENT_CARD).replace(/\s+/g,""));toast("Karta raqami nusxalandi.")}
+   catch(e){toast("Nusxalash ishlamadi. Karta raqamini qo‘lda belgilang.")}
+  });
+ }
+ if($("basicRequestBtn"))$("basicRequestBtn").addEventListener("click",()=>openPaymentForm("basic"));
+ if($("monthlyRequestBtn"))$("monthlyRequestBtn").addEventListener("click",()=>openPaymentForm("monthly"));
+ if($("yearlyRequestBtn"))$("yearlyRequestBtn").addEventListener("click",()=>openPaymentForm("yearly"));
+}
+
+async function openPaymentForm(plan){
+ if(!user||!db)throw new Error("Avval hisobingizga kiring.");
+ if(!["basic","monthly","yearly"].includes(plan))throw new Error("Tarif noto‘g‘ri.");
+ const existing=await db.from("premium_requests").select("id")
+  .eq("user_id",user.id).eq("status","pending").limit(1);
+ if(existing.error)throw existing.error;
+ if(existing.data?.length){toast("Sizda ko‘rib chiqilayotgan ariza mavjud.");return}
+ if(plan==="basic"&&(basicActive||premiumActive)){toast("Basic yoki Premium tarifingiz allaqachon faol.");return}
+
+ const price=planPrice(plan);
+ $("paymentSubmissionArea").innerHTML=`
+ <div class="card" id="paymentFormCard">
+  <h3>🧾 ${esc(planName(plan))} uchun to‘lov arizasi</h3>
+  <p class="muted">To‘lov summasi: <b style="color:var(--gold)">${esc(price)}</b></p>
+  <p>Uzum Bank kartasiga o‘tkazma qilganingizdan keyin quyidagi ma’lumotlarni yuboring.</p>
+  <form id="paymentReceiptForm">
+   <div class="field"><label>To‘lov qilgan shaxs ismi (ixtiyoriy)</label><input name="payer_name" maxlength="80" placeholder="Ism familiya"></div>
+   <div class="field"><label>O‘tkazma izohi yoki tranzaksiya raqami (ixtiyoriy)</label><input name="payment_reference" maxlength="100" placeholder="Masalan, tranzaksiya ID"></div>
+   <div class="field"><label>To‘lov cheki rasmi (majburiy, JPG/PNG/WEBP, 5 MB gacha)</label><input name="receipt" type="file" accept="image/jpeg,image/png,image/webp" required></div>
+   <label style="display:flex;gap:9px;align-items:flex-start;color:var(--text);line-height:1.5"><input name="payment_confirmed" type="checkbox" required style="width:auto;margin-top:3px"> Men ko‘rsatilgan summani o‘tkazganimni va chek haqiqiy ekanini tasdiqlayman.</label>
+   <div class="payment-actions">
+    <button class="btn gold" type="submit" id="sendPaymentReceiptBtn">✅ Chekni yuborish</button>
+    <button class="btn dark" type="button" id="cancelPaymentForm">Bekor qilish</button>
+   </div>
+   <p class="muted" style="font-size:12px">Rasm faqat to‘lov administratoriga ko‘rinadi. Karta PIN-kodi, CVV yoki SMS-kodli suratni yubormang.</p>
+  </form>
+ </div>`;
+ const form=$("paymentReceiptForm");
+ form.addEventListener("submit",async e=>{
+  e.preventDefault();
+  const button=$("sendPaymentReceiptBtn");button.disabled=true;button.textContent="Yuklanmoqda...";
+  try{await submitPaymentReceipt(form,plan)}
+  catch(error){fail(error);button.disabled=false;button.textContent="✅ Chekni yuborish"}
+ });
+ $("cancelPaymentForm").addEventListener("click",()=>$("paymentSubmissionArea").innerHTML="");
+ $("paymentFormCard").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+async function submitPaymentReceipt(form,plan){
+ if(!user||!db)throw new Error("Avval hisobingizga kiring.");
+ if(!["basic","monthly","yearly"].includes(plan))throw new Error("Tarif noto‘g‘ri.");
+ const file=form.elements.receipt.files?.[0];
+ if(!file)throw new Error("To‘lov chekini tanlang.");
+ const allowedTypes=["image/jpeg","image/png","image/webp"];
+ if(!allowedTypes.includes(file.type))throw new Error("Faqat JPG, PNG yoki WEBP rasm yuborish mumkin.");
+ if(file.size>PAYMENT_MAX_RECEIPT_BYTES)throw new Error("Chek rasmi 5 MB dan kichik bo‘lishi kerak.");
+ if(!form.elements.payment_confirmed.checked)throw new Error("To‘lov tasdig‘ini belgilang.");
+
+ const {data:existing,error:checkError}=await db.from("premium_requests")
+  .select("id").eq("user_id",user.id).eq("status","pending").limit(1);
+ if(checkError)throw checkError;
+ if(existing?.length)throw new Error("Sizda ko‘rib chiqilayotgan ariza mavjud.");
+ if(plan==="basic"&&(basicActive||premiumActive))throw new Error("Basic yoki Premium tarifingiz allaqachon faol.");
+
+ const ext=file.type==="image/png"?"png":file.type==="image/webp"?"webp":"jpg";
+ const filePath=`${user.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+ const storage=db.storage.from(PAYMENT_RECEIPTS_BUCKET);
+ const upload=await storage.upload(filePath,file,{cacheControl:"3600",upsert:false,contentType:file.type});
+ if(upload.error)throw upload.error;
+
+ const insert=await db.from("premium_requests").insert({
+  user_id:user.id,
+  plan,
+  receipt_path:filePath,
+  payer_name:String(form.elements.payer_name.value||"").trim().slice(0,80)||null,
+  payment_reference:String(form.elements.payment_reference.value||"").trim().slice(0,100)||null
+ });
+ if(insert.error){
+  await storage.remove([filePath]).catch(()=>{});
+  throw insert.error;
+ }
+ toast("✅ Chek va tarif arizasi yuborildi. Tekshiruv natijasini kuting.");
+ await renderPremium();
+}
+
+/* TO‘LOV ADMINI — CHEKLARNI MAXFIY KO‘RISH VA TEKSHIRISH */
+async function renderPaymentAdmin(){
+ await refreshAccess(true);
+ if(!paymentAdminActive){
+  $("page").innerHTML=empty("To‘lov administratori ruxsati topilmadi.");return;
+ }
+
+ const result=await db.from("premium_requests")
+  .select("id,user_id,plan,status,created_at,receipt_path,payer_name,payment_reference")
+  .eq("status","pending").order("created_at",{ascending:false});
+ if(result.error)throw result.error;
+ const requests=result.data||[];
+
+ let nameMap={};
+ if(requests.length){
+  const ids=[...new Set(requests.map(r=>r.user_id))];
+  const people=await db.from("profiles").select("id,full_name,username").in("id",ids);
+  if(!people.error){
+   (people.data||[]).forEach(p=>nameMap[p.id]=p.full_name||p.username||"Foydalanuvchi");
+  }
+ }
+
+ const receiptUrls={};
+ await Promise.all(requests.filter(r=>r.receipt_path&&String(r.receipt_path).startsWith(String(r.user_id)+"/")).map(async r=>{
+  const {data,error}=await db.storage.from(PAYMENT_RECEIPTS_BUCKET).createSignedUrl(r.receipt_path,300);
+  if(!error&&data?.signedUrl)receiptUrls[r.id]=data.signedUrl;
+  else console.warn("Chekni ochish imkoni bo‘lmadi:",error?.message);
+ }));
+
+ $("page").innerHTML=`
+ <div class="page-head">
+  <div><h1>💳 To‘lov boshqaruvi</h1><p class="muted">Uzum Bank o‘tkazmalari va cheklarni tekshirish.</p></div>
+  <button class="btn dark" id="paymentRefresh">🔄 Yangilash</button>
+ </div>
+ <div class="payment-info">
+  <b>To‘lov administratori</b><br>
+  Bu bo‘lim maktab admini huquqidan alohida. Tarifni faqat bank ilovasida pul tushganini tekshirgandan keyin tasdiqlang.
+  Chek rasmi ko‘rinmasa, arizani tasdiqlamang.
+ </div>
+ <div class="card">
+  <h3>⏳ Kutilayotgan arizalar (${requests.length})</h3>
+  ${requests.length?requests.map(r=>{
+   const receipt=receiptUrls[r.id];
+   return `<div class="payment-request">
+    <h3>${esc(planName(r.plan))} — ${esc(planPrice(r.plan))}</h3>
+    <p><b>Foydalanuvchi:</b> ${esc(nameMap[r.user_id]||"Foydalanuvchi")}</p>
+    <p><b>UID:</b> <small>${esc(r.user_id)}</small></p>
+    <p><b>To‘lov qilgan shaxs:</b> ${esc(r.payer_name||"Ko‘rsatilmagan")}</p>
+    <p><b>Tranzaksiya izohi:</b> ${esc(r.payment_reference||"Ko‘rsatilmagan")}</p>
+    <p><b>Ariza sanasi:</b> ${esc(dateText(r.created_at))}</p>
+    ${receipt?`<a href="${esc(receipt)}" target="_blank" rel="noopener noreferrer"><img src="${esc(receipt)}" alt="To‘lov cheki" style="display:block;width:100%;max-width:360px;max-height:420px;object-fit:contain;background:#fff;border-radius:10px;margin:10px 0"></a><small class="muted">Chek havolasi 5 daqiqa amal qiladi; zarur bo‘lsa sahifani yangilang.</small>`:'<div class="notice">⚠️ Chek fayli topilmadi yoki uni ochishga ruxsat yo‘q. Tasdiqlash o‘chirilgan.</div>'}
+    <div class="payment-actions">
+     <button class="btn gold" data-payment-approve="${esc(r.id)}" ${!receipt?"disabled":""}>✅ Tasdiqlash</button>
+     <button class="btn red" data-payment-reject="${esc(r.id)}">❌ Rad etish</button>
+    </div>
+   </div>`;
+  }).join(""):empty("Hozircha yangi arizalar yo‘q.")}
+ </div>`;
+
+ $("paymentRefresh").addEventListener("click",()=>renderPaymentAdmin().catch(fail));
+ $("page").querySelectorAll("[data-payment-approve]").forEach(button=>{
+  button.addEventListener("click",()=>reviewPayment(button.dataset.paymentApprove,"approved",button));
+ });
+ $("page").querySelectorAll("[data-payment-reject]").forEach(button=>{
+  button.addEventListener("click",()=>reviewPayment(button.dataset.paymentReject,"rejected",button));
+ });
+}
+
+async function reviewPayment(requestId,decision,button){
+ await refreshAccess(true);
+ if(!paymentAdminActive)throw new Error("To‘lov administratori ruxsati kerak.");
+ const question=decision==="approved"
+  ?"Bank ilovasida pul tushgani tekshirildimi? Tasdiqlansa tarif faollashadi."
+  :"Arizani rad etasizmi?";
+ if(!confirm(question))return;
+
+ button.disabled=true;
+ try{
+  const {data,error}=await db.rpc("el_review_payment_request",{
+   p_request_id:requestId,p_decision:decision
+  });
+  if(error)throw error;
+  if(!data?.success)throw new Error(data?.error||"Ariza holati o‘zgarmadi.");
+  toast(decision==="approved"?"✅ Tarif faollashtirildi.":"Ariza rad etildi.");
+  premiumCheckedAt=0;
+  await renderPaymentAdmin();
+ }catch(e){fail(e);button.disabled=false}
+}
+/* DASHBOARD */
+async function renderDashboard(){
+ const [c,g,a,t]=await Promise.all([
+  countRows("courses"),countRows("grades"),countRows("attendance"),countRows("assignments")
+ ]);
+
+ let pushCard="";
+ if(await premiumHasAccess()||isPlatformAdmin()){
+  pushCard=`<div class="card"><h3>🔔 Telefon bildirishnomalari</h3><p>EduLife yangiliklarini telefoningizda olish uchun bildirishnomalarni yoqing.</p><button class="btn gold" id="enablePushBtn" type="button">🔔 Bildirishnomalarni yoqish</button><p class="muted" id="pushStatus">${esc(pushPermissionText())}</p></div>`;
+ }else{
+  pushCard=`<div class="card"><h3>🔔 Telefon bildirishnomalari 🔒</h3><p>Bu xizmat Premium tarifida mavjud.</p><button class="btn gold" onclick="go('premium')">Premiumni ko‘rish</button></div>`;
+ }
+
+ let family="";
+ if(activeRole==="parent"){
+  const {data:links,error}=await db.from("parent_student_links").select("student_id").eq("parent_id",user.id);
+  if(error)throw error;
+  const ids=(links||[]).map(x=>x.student_id).filter(Boolean);
+  if(ids.length){
+   const {data:children,error:childError}=await db.from("profiles").select("id,full_name").in("id",ids);
+   if(childError)throw childError;
+   family=`<div class="card"><h3>Farzandlaringiz</h3>${(children||[]).map(p=>`<p>👤 <b>${esc(p.full_name||"O‘quvchi")}</b></p>`).join("")}</div>`;
+  }else family=`<div class="card">${empty("Farzand hali bog‘lanmagan")}</div>`;
+ }
+
+ $("page").innerHTML=`
+ <div class="page-head"><div><h1>Assalomu alaykum, ${esc(profile.full_name||"")}!</h1><p class="muted">EduLife shaxsiy boshqaruv paneli.</p></div><span class="badge gold">${esc(roleName(activeRole))}</span></div>
+ ${profile.role==="admin"&&activeRole!=="admin"?'<div class="notice">Maktab admini ko‘rinishi.</div>':""}
+ <div class="grid">
+  ${statCard("Kurslar",c,"▣")}${statCard("Baholar",g,"★")}
+  ${statCard("Davomat",a,"✓")}${statCard("Vazifalar",t,"✎")}
+ </div>
+ ${family}${pushCard}
+ <div class="two">
+  <div class="card"><h3>EduLife</h3><p>Barcha o‘quv jarayoni bir joyda.</p><button class="btn gold" onclick="go('courses')">Kurslarni ochish</button></div>
+  <div class="card"><h3>Hisobingiz</h3><p>${esc(profile.username||user.email)}</p><p>Ko‘rinish: ${esc(roleName(activeRole))}</p><button class="btn dark" onclick="go('premium')">💎 Tarifim</button></div>
+ </div>`;
+
+ const pushButton=$("enablePushBtn");
+ if(pushButton)pushButton.addEventListener("click",enablePushNotifications);
+}
+
+/* PUSH */
+function pushPermissionText(){
+ if(!("Notification" in window))return "Brauzer bildirishnomalarni qo‘llamaydi.";
+ if(Notification.permission==="granted")return "Brauzer ruxsati berilgan.";
+ if(Notification.permission==="denied")return "Chrome sayt sozlamalarida bildirishnomaga ruxsat bering.";
+ return "Bildirishnomalarni yoqish uchun tugmani bosing.";
+}
+async function getFirebaseMessaging(){
+ if(!window.firebase||!firebase.messaging)throw new Error("Firebase kutubxonasi yuklanmadi.");
+ if(!await firebase.messaging.isSupported())throw new Error("Bu brauzer Firebase push xizmatini qo‘llamaydi.");
+ if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
+ firebaseMessaging=firebase.messaging();
+ if(!firebaseForegroundListenerAdded){
+  firebaseMessaging.onMessage(payload=>{
+   toast("🔔 "+(payload?.notification?.title||"EduLife")+" — "+(payload?.notification?.body||"Yangi bildirishnoma."));
+  });
+  firebaseForegroundListenerAdded=true;
+ }
+ return firebaseMessaging;
+}
+async function enablePushNotifications(){
+ if(!await premiumHasAccess()){toast("Bildirishnomalar Premium xizmatidir.");go("premium");return}
+ const button=$("enablePushBtn"),status=$("pushStatus");
+ if(button){button.disabled=true;button.textContent="Ulanmoqda..."}
+ try{
+  if(!user||!db)throw new Error("Avval akkauntingizga kiring.");
+  if(!window.isSecureContext)throw new Error("Sayt HTTPS manzilda ochilishi kerak.");
+  if(!("serviceWorker" in navigator)||!("Notification" in window))throw new Error("Brauzer bildirishnomalarni qo‘llamaydi.");
+  if(Notification.permission==="denied")throw new Error("Chrome sayt sozlamalaridan bildirishnomaga ruxsat bering.");
+  const permission=Notification.permission==="granted"?"granted":await Notification.requestPermission();
+  if(permission!=="granted")throw new Error("Bildirishnomaga ruxsat berilmadi.");
+  const registration=await navigator.serviceWorker.register("/firebase-messaging-sw.js",{scope:"/"});
+  await navigator.serviceWorker.ready;
+  const messaging=await getFirebaseMessaging();
+  const token=await messaging.getToken({vapidKey:FIREBASE_VAPID_KEY,serviceWorkerRegistration:registration});
+  if(!token)throw new Error("Firebase token qaytarmadi.");
+  const {error}=await db.from("push_subscriptions").upsert({
+   user_id:user.id,token,updated_at:new Date().toISOString()
+  },{onConflict:"user_id,token"});
+  if(error)throw error;
+  if(status)status.textContent="✅ Bildirishnomalar yoqildi.";
+  toast("✅ Bildirishnomalar yoqildi!");
+ }catch(e){if(status)status.textContent=e.message||"Xatolik.";fail(e)}
+ finally{if(button){button.disabled=false;button.textContent="🔔 Bildirishnomalarni yoqish"}}
+}
+
+/* AKKAUNTLAR */
+async function renderAccounts(){
+ if(!isTeacher())throw new Error("Bu bo‘lim ustoz va admin uchun.");
+ const people=await rows("profiles","id,full_name,role,username");
+ let html=`<div class="page-head"><div><h1>Akkauntlar</h1><p class="muted">Login va parollarni boshqarish.</p></div></div>`;
+
+ if(isAdmin()){
+  html+=`<div class="card"><h3>Yangi ustoz akkaunti</h3><form id="issueTeacherForm">
+   <input type="hidden" name="role" value="teacher"><div class="form-grid">
+   ${field("full_name","Ustozning ism-familiyasi")}${field("username","Ustoz logini")}
+   ${field("password","Boshlang‘ich parol","Kamida 8 belgi")}
+   <div class="wide"><button class="btn gold">Ustoz akkauntini yaratish</button></div>
+   </div></form></div>`;
+ }else{
+  const courses=(await rows("courses","id,title,teacher_id")).filter(c=>c.teacher_id===user.id);
+  const students=people.filter(p=>p.role==="student");
+  html+=`
+  <div class="card"><h3>Yangi o‘quvchi akkaunti</h3><form id="issueStudentForm">
+   <input type="hidden" name="role" value="student"><div class="form-grid">
+   ${field("full_name","O‘quvchining ism-familiyasi")}${field("username","O‘quvchi logini")}
+   ${field("password","Boshlang‘ich parol","Kamida 8 belgi")}
+   <div><label>Kurs</label><select name="course_id" required><option value="">Kursni tanlang</option>${courses.map(c=>`<option value="${esc(c.id)}">${esc(c.title)}</option>`).join("")}</select></div>
+   <div class="wide"><button class="btn gold">O‘quvchi akkauntini yaratish</button></div>
+   </div></form></div>
+  <div class="card"><h3>Yangi ota-ona akkaunti</h3><form id="issueParentForm">
+   <input type="hidden" name="role" value="parent"><div class="form-grid">
+   ${field("full_name","Ota-onaning ism-familiyasi")}${field("username","Ota-ona logini")}
+   ${field("password","Boshlang‘ich parol","Kamida 8 belgi")}
+   <div><label>Farzand</label><select name="student_id" required><option value="">O‘quvchini tanlang</option>${students.map(p=>`<option value="${esc(p.id)}">${esc(p.full_name||"O‘quvchi")}</option>`).join("")}</select></div>
+   <div class="wide"><button class="btn gold">Ota-ona akkauntini yaratish</button></div>
+   </div></form></div>`;
+  if(!courses.length)html+=`<div class="notice">Avval kurs yarating.</div>`;
+ }
+
+ if(lastIssued)html+=`<div class="card"><h3>Oxirgi yaratilgan akkaunt</h3><p>Ism: <b>${esc(lastIssued.name)}</b></p><p>Login: <b>${esc(lastIssued.username)}</b></p><p>Parol: <b>${esc(lastIssued.password)}</b></p><button class="btn dark" id="copyCredentials">Login va parolni nusxalash</button></div>`;
+ html+=`<div class="card"><h3>Foydalanuvchilar (${people.length})</h3><div class="table-wrap"><table><thead><tr><th>Ism</th><th>Login</th><th>Rol</th></tr></thead><tbody>${people.map(p=>`<tr><td>${esc(p.full_name||"—")}</td><td>${esc(p.username||"—")}</td><td>${esc(roleName(p.role))}</td></tr>`).join("")}</tbody></table></div></div>`;
+ $("page").innerHTML=html;
+ const copy=$("copyCredentials");
+ if(copy)copy.addEventListener("click",async()=>{
+  try{await navigator.clipboard.writeText(`Login: ${lastIssued.username}\nParol: ${lastIssued.password}`);toast("Nusxalandi.")}
+  catch(e){toast("Nusxalash uchun ruxsat kerak.")}
+ });
+}
+async function issueAccount(form){
+ const f=new FormData(form),body={
+  full_name:String(f.get("full_name")||"").trim(),
+  username:String(f.get("username")||"").trim().toLowerCase(),
+  password:String(f.get("password")||""),role:String(f.get("role")||"")
+ };
+ if(body.full_name.length<2)throw new Error("Ism-familiyani kiriting.");
+ if(body.username.length<3)throw new Error("Login kamida 3 belgi bo‘lsin.");
+ if(body.password.length<8)throw new Error("Parol kamida 8 belgidan iborat bo‘lsin.");
+ if(f.get("course_id"))body.course_id=f.get("course_id");
+ if(f.get("student_id"))body.student_id=f.get("student_id");
+ const {data,error}=await db.functions.invoke("create-account",{body});
+ if(error)throw error;if(!data?.success)throw new Error(data?.error||"Akkaunt yaratilmadi.");
+ lastIssued={name:body.full_name,username:data.username||body.username,password:body.password};
+ toast("Akkaunt yaratildi.");await go("accounts");
+}
+
+/* KURSLAR */
+async function renderCourses(){
+ const [courses,people]=await Promise.all([
+  rows("courses","id,title,description,teacher_id,created_at"),
+  rows("profiles","id,full_name,role")
+ ]);
+ const names=makeNameMap(people);
+ let html=`<div class="page-head"><div><h1>Kurslar</h1><p class="muted">Ta'lim kurslarini boshqarish.</p></div></div>`;
+ if(isTeacher())html+=`<div class="card"><h3>Yangi kurs yaratish</h3><form id="courseForm" class="form-grid">${field("title","Kurs nomi","Masalan: Matematika")}${field("description","Kurs tavsifi","Qisqacha ma'lumot")}<div class="wide"><button class="btn gold">Kurs yaratish</button></div></form></div>`;
+ if(activeRole==="student")html+=`<div class="card"><h3>Kursga qo‘shilish</h3>${courses.length?`<form id="joinForm">${selectField("course_id","Kurs",courses.map(c=>({value:c.id,label:c.title})),"Kursni tanlang")}<button class="btn" style="margin-top:10px">Kursga qo‘shilish</button></form>`:empty("Hozircha kurslar yo‘q")}</div>`;
+ html+='<div class="grid">';
+ for(const c of courses)html+=`<div class="card"><h3>${esc(c.title)}</h3><p>${esc(c.description||"")}</p><small class="muted">Ustoz: ${esc(personName(c.teacher_id,names))}</small></div>`;
+ html+='</div>';$("page").innerHTML=html+(courses.length?"":empty("Hozircha kurslar yo‘q"));
+}
+async function createCourse(form){
+ const f=new FormData(form);
+ const {error}=await db.from("courses").insert({title:String(f.get("title")).trim(),description:String(f.get("description")).trim(),teacher_id:user.id});
+ if(error)throw error;toast("Kurs yaratildi.");await go("courses");
+}
+async function joinCourse(form){
+ const id=new FormData(form).get("course_id");if(!id)throw new Error("Kursni tanlang.");
+ const {error}=await db.from("course_enrollments").insert({course_id:id,student_id:user.id});
+ if(error)throw error;toast("Kursga qo‘shildingiz.");await go("courses");
+}
+
+/* BAHOLAR — 10 BALLIK, DARS VA KURS ALOHIDA */
+async function renderGrades(){
+ const [data,courses,people]=await Promise.all([
+  rows("grades","id,student_id,course_id,grade,grade_type,explanation,created_at"),
+  rows("courses","id,title,teacher_id"),rows("profiles","id,full_name,role")
+ ]);
+ const cm=makeCourseMap(courses),pm=makeNameMap(people);
+ const own=courses.filter(c=>isAdmin()||c.teacher_id===user.id);
+ let html=`<div class="page-head"><div><h1>⭐ Baholar</h1><p class="muted">Barcha baholar 10 ballik tizimda.</p></div><span class="badge gold">0–10 ball</span></div>`;
+ if(isTeacher())html+=`<div class="card"><h3>Yangi baho qo‘yish</h3><form id="gradeForm" class="form-grid">
+ ${selectField("course_id","Kurs",own.map(c=>({value:c.id,label:c.title})),"Kursni tanlang")}
+ ${selectField("student_id","O‘quvchi",people.filter(p=>p.role==="student").map(p=>({value:p.id,label:p.full_name||"O‘quvchi"})),"O‘quvchini tanlang")}
+ <div><label>Baho (0–10)</label><input name="grade" type="number" min="0" max="10" step="0.5" required placeholder="Masalan: 8.5"></div>
+ <div><label>Baho turi</label><select name="grade_type"><option value="daily">Dars bahosi</option><option value="course">Kurs bahosi</option><option value="exam">Nazorat / imtihon</option></select></div>
+ <div class="wide"><label>Izoh</label><textarea name="explanation"></textarea></div>
+ <div class="wide"><button class="btn gold">Bahoni saqlash</button></div></form></div>`;
+ const lessonGrades=data.filter(g=>g.grade_type!=="course"),courseGrades=data.filter(g=>g.grade_type==="course");
+ function gradeList(list){
+  if(!list.length)return empty("Hozircha baholar yo‘q");
+  return `<div class="list">${list.map(g=>`<div class="item"><strong>${esc(courseName(g.course_id,cm))} — ${gradeBadge(g.grade)}</strong><div>${esc(g.explanation||"Izoh yo‘q")}</div><small>${esc(personName(g.student_id,pm))} · ${g.grade_type==="course"?"Kurs bahosi":g.grade_type==="exam"?"Nazorat / imtihon":"Dars bahosi"} · ${esc(dateText(g.created_at))}</small></div>`).join("")}</div>`;
+ }
+ html+=`<div class="card"><h3>📖 Dars baholari</h3>${gradeList(lessonGrades)}</div><div class="card"><h3>📚 Kurs baholari</h3>${gradeList(courseGrades)}</div><div class="notice">🔴 0–4 · 🟠 5–6 · 🔵 7–8 · 🟢 9–10.</div>`;
+ $("page").innerHTML=html;
+}
+async function createGrade(form){
+ const f=new FormData(form),grade=Number(f.get("grade"));
+ if(!Number.isFinite(grade)||grade<0||grade>10)throw new Error("Baho 0 dan 10 gacha bo‘lishi kerak.");
+ const {error}=await db.from("grades").insert({
+  course_id:f.get("course_id"),student_id:f.get("student_id"),teacher_id:user.id,
+  grade,grade_type:f.get("grade_type"),explanation:String(f.get("explanation")||"").trim()
+ });
+ if(error)throw error;toast("10 ballik baho saqlandi.");await go("grades");
+}
+
+/* DAVOMAT */
+async function renderAttendance(){
+ const [data,courses,people]=await Promise.all([
+  rows("attendance","id,student_id,course_id,status,attendance_date,note"),
+  rows("courses","id,title,teacher_id"),rows("profiles","id,full_name,role")
+ ]);
+ const cm=makeCourseMap(courses),pm=makeNameMap(people);
+ const own=courses.filter(c=>isAdmin()||c.teacher_id===user.id);
+ let html=`<div class="page-head"><div><h1>Davomat</h1><p class="muted">Darsga qatnashish.</p></div></div>`;
+ if(isTeacher())html+=`<div class="card"><h3>Davomat belgilash</h3><form id="attendanceForm" class="form-grid">
+ ${selectField("course_id","Kurs",own.map(c=>({value:c.id,label:c.title})),"Kursni tanlang")}
+ ${selectField("student_id","O‘quvchi",people.filter(p=>p.role==="student").map(p=>({value:p.id,label:p.full_name||"O‘quvchi"})),"O‘quvchini tanlang")}
+ <div><label>Holat</label><select name="status"><option value="present">Keldi</option><option value="absent">Kelmagan</option><option value="late">Kechikdi</option></select></div>
+ ${field("attendance_date","Sana","","date")}
+ <div class="wide"><label>Izoh</label><textarea name="note"></textarea></div>
+ <div class="wide"><button class="btn gold">Saqlash</button></div></form></div>`;
+ html+='<div class="list">';
+ for(const a of data){
+  const label={present:"Keldi",absent:"Kelmagan",late:"Kechikdi"}[a.status]||a.status;
+  html+=`<div class="item"><strong>${esc(courseName(a.course_id,cm))} <span class="badge">${esc(label)}</span></strong><div>${esc(a.note||"")}</div><small>${esc(personName(a.student_id,pm))} · ${esc(a.attendance_date||"")}</small></div>`;
+ }
+ html+='</div>';$("page").innerHTML=html+(data.length?"":empty("Davomat yozuvlari yo‘q"));
+}
+async function createAttendance(form){
+ const f=new FormData(form);
+ const {error}=await db.from("attendance").insert({
+  course_id:f.get("course_id"),student_id:f.get("student_id"),teacher_id:user.id,
+  status:f.get("status"),attendance_date:f.get("attendance_date")||dateKey(new Date()),
+  note:String(f.get("note")||"").trim()
+ });
+ if(error)throw error;toast("Davomat saqlandi.");await go("attendance");
+}
+
+/* UY VAZIFALARI */
+async function renderAssignments(){
+ const [data,courses,subs,people]=await Promise.all([
+  rows("assignments","id,course_id,title,description,due_at"),
+  rows("courses","id,title,teacher_id"),
+  rows("submissions","id,assignment_id,student_id,content,score,submitted_at"),
+  rows("profiles","id,full_name,role")
+ ]);
+ const cm=makeCourseMap(courses),pm=makeNameMap(people),own=courses.filter(c=>isAdmin()||c.teacher_id===user.id);
+ let html=`<div class="page-head"><div><h1>Uy vazifalari</h1><p class="muted">Topshiriqlar va javoblar.</p></div></div>`;
+ if(isTeacher())html+=`<div class="card"><h3>Vazifa yaratish</h3><form id="assignmentForm" class="form-grid">
+ ${selectField("course_id","Kurs",own.map(c=>({value:c.id,label:c.title})),"Kursni tanlang")}
+ ${field("title","Vazifa nomi","Masalan: 5-mashq")}
+ <div class="wide"><label>Tavsif</label><textarea name="description" required></textarea></div>
+ ${field("due_at","Muddati","","datetime-local")}
+ <div class="wide"><button class="btn gold">Vazifa yaratish</button></div></form></div>`;
+ html+='<div class="list">';
+ for(const a of data){
+  const mine=subs.find(s=>s.assignment_id===a.id&&s.student_id===user.id);
+  const answers=subs.filter(s=>s.assignment_id===a.id);
+  html+=`<div class="item"><strong>${esc(a.title)}</strong><div>${esc(a.description||"")}</div><small>Kurs: ${esc(courseName(a.course_id,cm))} · Muddat: ${esc(dateText(a.due_at))}</small>
+  ${activeRole==="student"?`<form class="submissionForm" data-assignment="${esc(a.id)}" style="margin-top:12px"><label>Javobingiz</label><textarea name="content" required>${esc(mine?.content||"")}</textarea><button class="btn" style="margin-top:8px">${mine?"Javobni yangilash":"Javob yuborish"}</button></form>`:""}
+  ${isTeacher()?`<details style="margin-top:10px"><summary>Yuborilgan javoblar (${answers.length})</summary>${answers.map(s=>`<p><b>${esc(personName(s.student_id,pm))}:</b> ${esc(s.content)}</p>`).join("")||empty("Javoblar yo‘q")}</details>`:""}
+  </div>`;
+ }
+ html+='</div>';$("page").innerHTML=html+(data.length?"":empty("Hozircha vazifalar yo‘q"));
+}
+async function createAssignment(form){
+ const f=new FormData(form);
+ const {error}=await db.from("assignments").insert({
+  course_id:f.get("course_id"),teacher_id:user.id,title:String(f.get("title")).trim(),
+  description:String(f.get("description")).trim(),
+  due_at:f.get("due_at")?new Date(f.get("due_at")).toISOString():null
+ });
+ if(error)throw error;toast("Vazifa yaratildi.");await go("assignments");
+}
+async function submitAssignment(form){
+ const content=String(new FormData(form).get("content")||"").trim(),assignment_id=form.dataset.assignment;
+ const {data:old,error}=await db.from("submissions").select("id")
+  .eq("assignment_id",assignment_id).eq("student_id",user.id).maybeSingle();
+ if(error)throw error;
+ const result=old?await db.from("submissions").update({content}).eq("id",old.id):
+  await db.from("submissions").insert({assignment_id,student_id:user.id,content});
+ if(result.error)throw result.error;toast("Javob yuborildi.");await go("assignments");
+}  
+  /* IZOHLAR */
+async function renderComments(){
+ const [data,courses,people]=await Promise.all([
+  rows("course_comments","id,course_id,student_id,teacher_id,body,created_at"),
+  rows("courses","id,title"),rows("profiles","id,full_name,role")
+ ]);
+ const cm=makeCourseMap(courses),pm=makeNameMap(people);
+ let html=`<div class="page-head"><div><h1>Izohlar</h1><p class="muted">Kurs bo‘yicha fikrlar.</p></div></div>`;
+ if(activeRole==="student"||isTeacher())html+=`<div class="card"><h3>Izoh yozish</h3><form id="commentForm">
+ <div class="field"><label>Kurs</label><select name="course_id" required>${courses.map(c=>`<option value="${esc(c.id)}">${esc(c.title)}</option>`).join("")}</select></div>
+ <div class="field"><label>Izoh</label><textarea name="body" required></textarea></div><button class="btn gold">Yuborish</button></form></div>`;
+ html+='<div class="list">';
+ for(const c of data)html+=`<div class="item"><strong>${esc(courseName(c.course_id,cm))}</strong><div>${esc(c.body)}</div><small>${esc(personName(c.student_id||c.teacher_id,pm))} · ${esc(dateText(c.created_at))}</small></div>`;
+ html+='</div>';$("page").innerHTML=html+(data.length?"":empty("Izohlar yo‘q"));
+}
+async function createComment(form){
+ const f=new FormData(form),teacher=isTeacher();
+ const {error}=await db.from("course_comments").insert({
+  course_id:f.get("course_id"),student_id:teacher?null:user.id,
+  teacher_id:teacher?user.id:null,body:String(f.get("body")||"").trim()
+ });
+ if(error)throw error;toast("Izoh yuborildi.");await go("comments");
+}
+
+/* XABARLAR */
+async function renderMessages(){
+ const [data,people]=await Promise.all([
+  rows("messages","id,sender_id,receiver_id,body,created_at"),
+  rows("profiles","id,full_name,role")
+ ]);
+ const pm=makeNameMap(people),recipients=people.filter(p=>p.id!==user.id);
+ const visible=data.filter(m=>!String(m.body||"").startsWith("EDULIFE_ROLE_"));
+ let html=`<div class="page-head"><div><h1>Xabarlar</h1><p class="muted">Shaxsiy xabarlar.</p></div></div>
+ <div class="card"><h3>Xabar yuborish</h3><form id="messageForm">
+ ${selectField("receiver_id","Qabul qiluvchi",recipients.map(p=>({value:p.id,label:(p.full_name||"Foydalanuvchi")+" · "+roleName(p.role)})),"Ismni tanlang")}
+ <div class="field"><label>Xabar</label><textarea name="body" required></textarea></div>
+ <button class="btn gold">Yuborish</button></form></div><div class="list">`;
+ for(const m of visible){
+  const outgoing=m.sender_id===user.id,otherId=outgoing?m.receiver_id:m.sender_id;
+  html+=`<div class="item"><strong>${outgoing?"Siz → "+esc(personName(otherId,pm)):esc(personName(otherId,pm))+" → Siz"}</strong><div>${esc(m.body)}</div><small>${esc(dateText(m.created_at))}</small></div>`;
+ }
+ html+='</div>';$("page").innerHTML=html+(visible.length?"":empty("Xabarlar yo‘q"));
+}
+async function createMessage(form){
+ const f=new FormData(form),receiver=f.get("receiver_id"),body=String(f.get("body")||"").trim();
+ if(!receiver||!body)throw new Error("Qabul qiluvchi va xabarni kiriting.");
+ const {error}=await db.from("messages").insert({sender_id:user.id,receiver_id:receiver,body});
+ if(error)throw error;toast("Xabar yuborildi.");await go("messages");
+}
+
+/* DARS JADVALI */
+async function renderSchedule(){
+ const [data,courses]=await Promise.all([
+  rows("lesson_schedule","id,course_id,day_of_week,start_time,end_time,room"),
+  rows("courses","id,title,teacher_id")
+ ]);
+ const cm=makeCourseMap(courses),own=courses.filter(c=>isAdmin()||c.teacher_id===user.id);
+ const days=["","Dushanba","Seshanba","Chorshanba","Payshanba","Juma","Shanba","Yakshanba"];
+ let html=`<div class="page-head"><div><h1>Dars jadvali</h1><p class="muted">Haftalik jadval.</p></div></div>`;
+ if(isTeacher())html+=`<div class="card"><h3>Dars qo‘shish</h3><form id="scheduleForm" class="form-grid">
+ ${selectField("course_id","Kurs",own.map(c=>({value:c.id,label:c.title})),"Kursni tanlang")}
+ <div><label>Hafta kuni</label><select name="day_of_week">${days.slice(1).map((d,i)=>`<option value="${i+1}">${d}</option>`).join("")}</select></div>
+ ${field("start_time","Boshlanish vaqti","","time")}${field("end_time","Tugash vaqti","","time")}${field("room","Xona","Xona raqami")}
+ <div class="wide"><button class="btn gold">Saqlash</button></div></form></div>`;
+ html+='<div class="list">';
+ for(const s of data)html+=`<div class="item"><strong>${esc(courseName(s.course_id,cm))}</strong><div>${days[s.day_of_week]||"—"} · ${esc(String(s.start_time||"").slice(0,5))} – ${esc(String(s.end_time||"").slice(0,5))}</div><small>Xona: ${esc(s.room||"—")}</small></div>`;
+ html+='</div>';$("page").innerHTML=html+(data.length?"":empty("Jadval yo‘q"));
+}
+async function createSchedule(form){
+ const f=new FormData(form);
+ const {error}=await db.from("lesson_schedule").insert({
+  course_id:f.get("course_id"),teacher_id:user.id,day_of_week:Number(f.get("day_of_week")),
+  start_time:f.get("start_time"),end_time:f.get("end_time"),room:String(f.get("room")||"").trim()
+ });
+ if(error)throw error;toast("Jadval saqlandi.");await go("schedule");
+}
+
+/* PROFIL */
+async function renderProfile(){
+ $("page").innerHTML=`<div class="page-head"><div><h1>Profil</h1><p class="muted">Shaxsiy ma'lumotlar.</p></div></div>
+ <div class="card"><h3>${esc(profile.full_name||"")}</h3>
+ <p>Haqiqiy rol: <span class="badge gold">${esc(roleName(profile.role))}</span></p>
+ <p>Joriy ko‘rinish: <span class="badge">${esc(roleName(activeRole))}</span></p>
+ <p>Login: <b>${esc(profile.username||user.email)}</b></p>
+  <form id="profileForm"><div class="field"><label>Ism va familiya</label><input name="full_name" value="${esc(profile.full_name||"")}" required></div><button class="btn gold">Profilni saqlash</button></form></div>`;
+}
+async function saveProfile(form){
+ const name=String(new FormData(form).get("full_name")||"").trim();
+ if(name.length<2)throw new Error("Ismni to‘liq kiriting.");
+ const {error}=await db.from("profiles").update({full_name:name}).eq("id",user.id);
+ if(error)throw error;profile.full_name=name;$("topName").textContent=name;$("avatar").textContent=name.charAt(0).toUpperCase();
+ toast("Profil yangilandi.");await go("profile");
+}
+
+/* STATISTIKA */
+function average(values){if(!values.length)return 0;return values.reduce((a,b)=>a+b,0)/values.length}
+function gradeTrend(values){
+ const sorted=[...values].sort((a,b)=>new Date(a.created_at||0)-new Date(b.created_at||0));
+ if(sorted.length<2)return {enough:false,current:average(sorted.map(x=>Number(x.grade)||0)),first:0,latest:0,change:0};
+ const middle=Math.ceil(sorted.length/2),first=sorted.slice(0,middle),latest=sorted.slice(middle);
+ const firstAvg=average(first.map(x=>Number(x.grade)||0)),latestAvg=average(latest.map(x=>Number(x.grade)||0));
+ return {enough:true,first:firstAvg,latest:latestAvg,change:latestAvg-firstAvg,current:average(sorted.map(x=>Number(x.grade)||0))};
+}
+function trendLabel(change){
+ if(change>0.05)return `<span class="stats-change up">↗ Yaxshilangan +${change.toFixed(1)}</span>`;
+ if(change< -0.05)return `<span class="stats-change down">↘ Pasaygan ${change.toFixed(1)}</span>`;
+ return `<span class="stats-change same">→ Barqaror</span>`;
+}
+async function renderStatistics(){
+ const page=$("page");page.innerHTML=`<div class="card"><h3>📊 Statistikalar</h3><p>Ma’lumotlar yuklanmoqda...</p></div>`;
+ let studentIds=null,studentNames={};
+ if(activeRole==="student"){studentIds=[user.id];studentNames[user.id]=profile.full_name||"O‘quvchi"}
+ if(activeRole==="parent"){
+  const {data:links,error}=await db.from("parent_student_links").select("student_id").eq("parent_id",user.id);
+  if(error)throw error;
+  studentIds=[...new Set((links||[]).map(x=>x.student_id).filter(Boolean))];
+  if(!studentIds.length){page.innerHTML=empty("Hozircha bog‘langan farzand topilmadi");return}
+  const {data:children,error:childError}=await db.from("profiles").select("id,full_name").in("id",studentIds);
+  if(childError)throw childError;for(const c of children||[])studentNames[c.id]=c.full_name||"O‘quvchi";
+ }
+ let gradeQuery=db.from("grades").select("id,student_id,course_id,grade,grade_type,created_at");
+ let attendQuery=db.from("attendance").select("id,student_id,course_id,status,attendance_date");
+ let courseQuery=db.from("courses").select("id,title,teacher_id");
+ if(studentIds){gradeQuery=gradeQuery.in("student_id",studentIds);attendQuery=attendQuery.in("student_id",studentIds)}
+ else if(activeRole==="teacher"){
+  gradeQuery=gradeQuery.eq("teacher_id",user.id);attendQuery=attendQuery.eq("teacher_id",user.id);courseQuery=courseQuery.eq("teacher_id",user.id);
+ }
+ const [gr,ar,cr]=await Promise.all([gradeQuery,attendQuery,courseQuery]);
+ if(gr.error)throw gr.error;if(ar.error)throw ar.error;if(cr.error)throw cr.error;
+ const grades=gr.data||[],attendance=ar.data||[],courses=cr.data||[],courseMap=makeCourseMap(courses);
+ const avg=average(grades.map(g=>Number(g.grade)).filter(Number.isFinite));
+ const present=attendance.filter(a=>a.status==="present").length,absent=attendance.filter(a=>a.status==="absent").length,late=attendance.filter(a=>a.status==="late").length;
+ const rate=attendance.length?present/attendance.length*100:0;
+ let html=`<div class="page-head"><div><h1>📊 Statistikalar</h1><p class="muted">10 ballik tizim asosidagi natijalar.</p></div></div>
+ <div class="stats-overview">
+ <div class="stats-box"><small>Jami baholar</small><div class="number">${grades.length}</div></div>
+ <div class="stats-box"><small>O‘rtacha baho</small><div class="number">${avg.toFixed(1)}/10</div></div>
+ <div class="stats-box"><small>Kelgan darslar</small><div class="number">${present}</div></div>
+ <div class="stats-box"><small>Davomat</small><div class="number">${rate.toFixed(0)}%</div></div>
+ <div class="stats-box"><small>Kelmagan</small><div class="number">${absent}</div></div>
+ <div class="stats-box"><small>Kechikkan</small><div class="number">${late}</div></div></div>
+ <div class="card"><h3>📈 Fanlar bo‘yicha baholar</h3><p class="stats-hint">Har bir kurs bo‘yicha oldingi va keyingi baholar taqqoslanadi.</p></div>`;
+ const groups=studentIds?studentIds.map(id=>({id,name:studentNames[id]||"O‘quvchi",grades:grades.filter(g=>g.student_id===id)})):[{id:null,name:"Umumiy natijalar",grades}];
+ for(const group of groups){
+  const grouped={};for(const g of group.grades){if(!grouped[g.course_id])grouped[g.course_id]=[];grouped[g.course_id].push(g)}
+  if(studentIds)html+=`<h2>${esc(group.name)}</h2>`;
+  const ids=Object.keys(grouped);if(!ids.length)html+=`<div class="empty">Baholar mavjud emas.</div>`;
+  for(const id of ids){
+   const trend=gradeTrend(grouped[id]);
+   html+=`<div class="stats-course"><div class="page-head"><h3>${esc(courseMap[id]||"Kurs")}</h3>${trend.enough?trendLabel(trend.change):'<span class="badge">Yangi natija</span>'}</div>
+   ${trend.enough?`<div class="stats-row"><span>Avval</span><div class="stats-track"><div class="stats-fill old" style="width:${Math.max(0,Math.min(100,trend.first*10))}%"></div></div><b>${trend.first.toFixed(1)}</b></div>
+   <div class="stats-row"><span>Keyin</span><div class="stats-track"><div class="stats-fill" style="width:${Math.max(0,Math.min(100,trend.latest*10))}%"></div></div><b>${trend.latest.toFixed(1)}</b></div>`:
+   `<div class="stats-row"><span>Natija</span><div class="stats-track"><div class="stats-fill" style="width:${trend.current*10}%"></div></div><b>${trend.current.toFixed(1)}</b></div>`}
+   <p class="stats-hint">Jami baholar: ${grouped[id].length} · O‘rtacha: ${trend.current.toFixed(1)}/10</p></div>`;
+  }
+ }
+ html+=`<div class="card"><h3>📅 Davomat tahlili</h3><div class="stats-row"><span>Keldi</span><div class="stats-track"><div class="stats-fill" style="width:${rate}%"></div></div><b>${rate.toFixed(0)}%</b></div><p class="stats-hint">Jami: ${attendance.length} · Keldi: ${present} · Kelmagan: ${absent} · Kechikkan: ${late}</p></div>`;
+ page.innerHTML=html;
+}
+  /* YUTUQLAR */
+async function readStudentAchievements(studentId){
+ const [g,a,s]=await Promise.all([
+  db.from("grades").select("id,grade").eq("student_id",studentId),
+  db.from("attendance").select("id,status").eq("student_id",studentId),
+  db.from("submissions").select("id").eq("student_id",studentId)
+ ]);
+ if(g.error)throw g.error;if(a.error)throw a.error;if(s.error)throw s.error;
+ const grades=g.data||[],attendance=a.data||[],subs=s.data||[];
+ const numbers=grades.map(x=>Number(x.grade)).filter(Number.isFinite),avg=average(numbers);
+ const present=attendance.filter(x=>x.status==="present").length;
+ const attendanceRate=attendance.length?present/attendance.length*100:0,count=subs.length;
+ const badges=[
+  {icon:"⭐",title:"Birinchi baho",description:"Birinchi bahongni ol.",unlocked:grades.length>=1,progress:Math.min(grades.length,1),text:grades.length+"/1 baho"},
+  {icon:"🧠",title:"Bilimdon",description:"Kamida 3 ta baho va 8.5 yoki undan yuqori o‘rtacha natija.",unlocked:grades.length>=3&&avg>=8.5,progress:grades.length<3?grades.length/3:Math.min(avg/8.5,1),text:grades.length+"/3 baho · "+avg.toFixed(1)+"/10"},
+  {icon:"🏆",title:"A'lochi",description:"Kamida bitta 9.5 yoki undan yuqori baho olish.",unlocked:numbers.some(n=>n>=9.5),progress:numbers.some(n=>n>=9.5)?1:0,text:"9.5+ baho kutilmoqda"},
+  {icon:"🔥",title:"Faol o‘quvchi",description:"Kamida 5 marta darsga kelish.",unlocked:present>=5,progress:Math.min(present/5,1),text:present+"/5 kelgan dars"},
+  {icon:"🎖️",title:"Intizomli",description:"Kamida 5 ta davomat yozuvi va 90% qatnashuv.",unlocked:attendance.length>=5&&attendanceRate>=90,progress:attendance.length<5?attendance.length/5:Math.min(attendanceRate/90,1),text:attendance.length+"/5 yozuv · "+attendanceRate.toFixed(0)+"%"},
+  {icon:"📚",title:"Vazifalarni bajaruvchi",description:"Birinchi uy vazifasini yuborish.",unlocked:count>=1,progress:Math.min(count,1),text:count+"/1 vazifa"},
+  {icon:"💪",title:"Mehnatkash",description:"Kamida 5 ta uy vazifasini yuborish.",unlocked:count>=5,progress:Math.min(count/5,1),text:count+"/5 vazifa"}
+ ];
+ return {average:avg,tasks:count,unlocked:badges.filter(x=>x.unlocked).length,badges};
+}
+function achievementCard(b){
+ return `<div class="achievement-card ${b.unlocked?"":"locked"}"><div class="achievement-icon">${b.unlocked?b.icon:"🔒"}</div><h3>${esc(b.title)}</h3><p>${esc(b.description)}</p><div class="achievement-progress"><div class="achievement-progress-fill" style="width:${Math.max(0,Math.min(100,b.progress*100))}%"></div></div><div class="achievement-status">${b.unlocked?"✅ Ochildi":"🔒 "+esc(b.text)}</div></div>`;
+}
+async function renderAchievements(){
+ let students=[];
+ if(activeRole==="student")students=[{id:user.id,name:profile.full_name||"O‘quvchi"}];
+ else if(activeRole==="parent"){
+  const {data:links,error}=await db.from("parent_student_links").select("student_id").eq("parent_id",user.id);
+  if(error)throw error;const ids=[...new Set((links||[]).map(x=>x.student_id).filter(Boolean))];
+  if(!ids.length){$("page").innerHTML=empty("Bog‘langan farzand yo‘q.");return}
+  const {data:people,error:pe}=await db.from("profiles").select("id,full_name").in("id",ids);
+  if(pe)throw pe;students=ids.map(id=>({id,name:people.find(p=>p.id===id)?.full_name||"O‘quvchi"}));
+ }else{$("page").innerHTML=empty("Yutuqlar o‘quvchi va ota-ona hisoblarida ko‘rinadi.");return}
+ let html=`<div class="page-head"><div><h1>🏆 Yutuqlar tizimi</h1><p class="muted">Har bir harakating yangi nishonga yaqinlashtiradi.</p></div></div>`;
+ for(const s of students){
+  const stats=await readStudentAchievements(s.id);
+  html+=`<div class="card"><div class="page-head"><h3>🎓 ${esc(s.name)}</h3><span class="badge gold">${stats.unlocked}/${stats.badges.length} nishon</span></div><div class="two"><div class="card"><div class="muted">O‘rtacha baho</div><div class="stat">${stats.average.toFixed(1)}/10</div></div><div class="card"><div class="muted">Yuborilgan vazifalar</div><div class="stat">${stats.tasks}</div></div></div><h3>Nishonlaringiz</h3><div class="achievement-grid">${stats.badges.map(achievementCard).join("")}</div></div>`;
+ }
+ $("page").innerHTML=html;
+}
+
+/* PDF HISOBOT */
+async function getReportStudents(){
+ if(activeRole==="student")return [{id:user.id,name:profile.full_name||"O‘quvchi"}];
+ if(activeRole==="parent"){
+  const {data:links,error}=await db.from("parent_student_links").select("student_id").eq("parent_id",user.id);
+  if(error)throw error;const ids=[...new Set((links||[]).map(x=>x.student_id).filter(Boolean))];
+  if(!ids.length)return [];
+  const {data,error:e}=await db.from("profiles").select("id,full_name").in("id",ids);
+  if(e)throw e;return (data||[]).map(p=>({id:p.id,name:p.full_name||"O‘quvchi"}));
+ }
+ if(activeRole==="teacher"){
+  const {data:courses,error}=await db.from("courses").select("id").eq("teacher_id",user.id);
+  if(error)throw error;const ids=(courses||[]).map(c=>c.id);if(!ids.length)return [];
+  const {data:en,error:e}=await db.from("course_enrollments").select("student_id").in("course_id",ids);
+  if(e)throw e;const studentIds=[...new Set((en||[]).map(x=>x.student_id).filter(Boolean))];if(!studentIds.length)return [];
+  const {data:people,error:pe}=await db.from("profiles").select("id,full_name").in("id",studentIds);
+  if(pe)throw pe;return (people||[]).map(p=>({id:p.id,name:p.full_name||"O‘quvchi"}));
+ }
+ if(activeRole==="admin"){
+  const {data,error}=await db.from("profiles").select("id,full_name").eq("role","student");
+  if(error)throw error;return (data||[]).map(p=>({id:p.id,name:p.full_name||"O‘quvchi"}));
+ }
+ return [];
+}
+async function renderPdfReports(){
+ const page=$("page");page.innerHTML=`<div class="card"><h3>📄 PDF hisobot</h3><p>O‘quvchilar yuklanmoqda...</p></div>`;
+ const students=await getReportStudents();
+ if(!students.length){page.innerHTML=empty("Hisobot uchun o‘quvchi topilmadi.");return}
+ const isStudent=activeRole==="student";
+ page.innerHTML=`<div class="page-head"><div><h1>📄 PDF hisobot</h1><p class="muted">Baholar, davomat va izohlar.</p></div></div>
+ <div class="card"><h3>Hisobot tayyorlash</h3>
+ ${isStudent?'<div class="notice">Hisobot sizning shaxsiy ma’lumotlaringiz asosida.</div>':`<div class="field"><label>O‘quvchini tanlang</label><select id="pdfStudentSelect">${students.map(s=>`<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("")}</select></div>`}
+ <button class="btn gold full" id="generatePdfBtn">📥 PDF hisobotni tayyorlash</button><p class="muted">Hisobot oynasidan PDF sifatida saqlashingiz mumkin.</p></div>`;
+ $("generatePdfBtn").addEventListener("click",()=>{
+  const id=isStudent?user.id:$("pdfStudentSelect").value,student=students.find(s=>s.id===id);
+  if(student)generatePdfReport(student);
+ });
+}
+async function generatePdfReport(student){
+ const reportWindow=window.open("about:blank","_blank");
+ if(!reportWindow){toast("Brauzerda yangi oyna ochishga ruxsat bering.");return}
+ reportWindow.document.write("<p style='font-family:Arial;padding:20px'>Hisobot tayyorlanmoqda...</p>");
+ try{
+  const [gr,ar,cr]=await Promise.all([
+   db.from("grades").select("course_id,grade,grade_type,explanation,created_at").eq("student_id",student.id).order("created_at"),
+   db.from("attendance").select("course_id,status,attendance_date,note").eq("student_id",student.id).order("attendance_date"),
+   db.from("courses").select("id,title")
+  ]);
+  if(gr.error)throw gr.error;if(ar.error)throw ar.error;if(cr.error)throw cr.error;
+  const grades=gr.data||[],attendance=ar.data||[],courses=cr.data||[],cm=makeCourseMap(courses);
+  const avg=average(grades.map(g=>Number(g.grade)).filter(Number.isFinite));
+  const present=attendance.filter(a=>a.status==="present").length,absent=attendance.filter(a=>a.status==="absent").length,late=attendance.filter(a=>a.status==="late").length;
+  const rate=attendance.length?present/attendance.length*100:0;
+  const gradeRows=grades.map(g=>`<tr><td>${esc(courseName(g.course_id,cm))}</td><td>${esc(g.grade)}/10</td><td>${esc(g.grade_type)}</td><td>${esc(new Date(g.created_at).toLocaleDateString("uz-UZ"))}</td><td>${esc(g.explanation||"—")}</td></tr>`).join("");
+  const attendanceRows=attendance.map(a=>`<tr><td>${esc(courseName(a.course_id,cm))}</td><td>${esc({present:"Keldi",absent:"Kelmagan",late:"Kechikdi"}[a.status]||a.status)}</td><td>${esc(a.attendance_date||"—")}</td><td>${esc(a.note||"—")}</td></tr>`).join("");
+  reportWindow.document.open();
+  reportWindow.document.write(`<!DOCTYPE html><html lang="uz"><head><meta charset="UTF-8"><title>EduLife hisoboti</title><style>
+  body{font-family:Arial;color:#19263a;background:#eef2f7;padding:20px}.sheet{max-width:900px;margin:auto;padding:30px;background:white}
+  h1{font-size:24px}h2{font-size:18px;margin-top:28px;color:#234b8d}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}
+  .stat{border:1px solid #dce3ef;border-radius:10px;padding:14px}.stat strong{display:block;color:#285fc2;font-size:22px;margin-top:6px}
+  table{width:100%;border-collapse:collapse;margin-top:12px;font-size:12px}td,th{border:1px solid #dce3ef;padding:8px;text-align:left}th{background:#eaf0fc}
+  button{padding:12px 16px;background:#2868db;color:white;border:0;border-radius:8px}.toolbar{text-align:right;margin-bottom:14px}
+  @media print{body{background:white;padding:0}.sheet{padding:0}.toolbar{display:none}}
+  </style></head><body><div class="toolbar"><button onclick="window.print()">📥 PDF sifatida saqlash</button></div>
+  <div class="sheet"><h1>EduLife — O‘quv natijalari hisoboti</h1>
+  <p><b>O‘quvchi:</b> ${esc(student.name)}</p><p><b>Hisobot sanasi:</b> ${esc(new Date().toLocaleString("uz-UZ"))}</p>
+  <div class="summary"><div class="stat">Jami baholar<strong>${grades.length}</strong></div><div class="stat">O‘rtacha<strong>${avg.toFixed(1)}/10</strong></div><div class="stat">Davomat<strong>${rate.toFixed(0)}%</strong></div></div>
+  <h2>Baholar — 10 ballik tizim</h2>${gradeRows?`<table><thead><tr><th>Fan</th><th>Baho</th><th>Turi</th><th>Sana</th><th>Izoh</th></tr></thead><tbody>${gradeRows}</tbody></table>`:"<p>Baholar yo‘q.</p>"}
+  <h2>Davomat</h2><p>Keldi: ${present} · Kelmagan: ${absent} · Kechikdi: ${late}</p>
+  ${attendanceRows?`<table><thead><tr><th>Fan</th><th>Holat</th><th>Sana</th><th>Izoh</th></tr></thead><tbody>${attendanceRows}</tbody></table>`:"<p>Davomat ma’lumotlari yo‘q.</p>"}
+  <p style="margin-top:30px;color:#64748b;text-align:center">EduLife Smart Education Platform</p></div></body></html>`);
+  reportWindow.document.close();toast("Hisobot tayyor. PDF saqlash tugmasini bosing.");
+ }catch(e){reportWindow.document.body.textContent="Hisobot xatosi: "+e.message;fail(e)}
+}
+
+/* KALENDAR */
+function calendarTypeName(type){return {exam:"Imtihon",test:"Nazorat ishi",homework:"Uy vazifasi",reminder:"Eslatma",lesson:"Dars"}[type]||"Tadbir"}
+function calendarIcon(type){return {exam:"🎓",test:"📝",homework:"📚",reminder:"🔔",lesson:"🏫"}[type]||"📅"}
+async function loadCalendar(){
+ calendarEvents=[];calendarCourses=await getCalendarCourses();
+ const ids=calendarCourses.map(c=>c.id);if(!ids.length)return;
+ const [ar,er,sr]=await Promise.all([
+  db.from("assignments").select("id,course_id,title,description,due_at").in("course_id",ids).not("due_at","is",null),
+  db.from("calendar_events").select("id,course_id,title,description,event_type,event_date").in("course_id",ids),
+  db.from("lesson_schedule").select("id,course_id,day_of_week,start_time,end_time,room").in("course_id",ids)
+ ]);
+ if(ar.error)throw ar.error;if(er.error)throw er.error;if(sr.error)throw sr.error;
+ const cm=makeCourseMap(calendarCourses);
+ for(const a of ar.data||[])calendarEvents.push({id:"a"+a.id,title:a.title,description:a.description||"",date:a.due_at,type:"homework",course_name:cm[a.course_id]||"Kurs"});
+ for(const e of er.data||[])calendarEvents.push({id:"e"+e.id,title:e.title,description:e.description||"",date:e.event_date,type:e.event_type,course_name:cm[e.course_id]||"Kurs"});
+ const first=new Date(calendarMonth.getFullYear(),calendarMonth.getMonth(),1),offset=(first.getDay()+6)%7,start=new Date(first);
+ start.setDate(first.getDate()-offset);
+ for(const s of sr.data||[]){
+  for(let i=0;i<42;i++){
+   const day=new Date(start);day.setDate(start.getDate()+i);
+   const dow=(day.getDay()+6)%7+1;if(dow!==Number(s.day_of_week))continue;
+   const time=String(s.start_time||"09:00").slice(0,5),[h,m]=time.split(":").map(Number);
+   day.setHours(h||0,m||0,0,0);
+   calendarEvents.push({id:"l"+s.id+dateKey(day),title:"Dars: "+(cm[s.course_id]||"Kurs"),description:"Xona: "+(s.room||"—")+" · Tugash: "+String(s.end_time||"").slice(0,5),date:day.toISOString(),type:"lesson",course_name:cm[s.course_id]||"Kurs"});
+  }
+ }
+ calendarEvents=calendarEvents.filter(e=>!Number.isNaN(new Date(e.date).getTime())).sort((a,b)=>new Date(a.date)-new Date(b.date));
+}
+async function getCalendarCourses(){
+ if(activeRole==="admin")return await rows("courses","id,title,teacher_id");
+ if(activeRole==="teacher"){
+  const {data,error}=await db.from("courses").select("id,title,teacher_id").eq("teacher_id",user.id);
+  if(error)throw error;return data||[];
+ }
+ const {data,error}=await db.rpc("edulife_calendar_course_ids");
+ if(error)throw error;
+ const ids=[...new Set((data||[]).map(x=>x.course_id).filter(Boolean))];if(!ids.length)return [];
+ const {data:c,error:ce}=await db.from("courses").select("id,title,teacher_id").in("id",ids);
+ if(ce)throw ce;return c||[];
+}
+async function renderCalendar(){
+ const page=$("page");page.innerHTML=`<div class="card"><h3>📅 Kalendar</h3><p>Yuklanmoqda...</p></div>`;
+ await loadCalendar();
+ const y=calendarMonth.getFullYear(),m=calendarMonth.getMonth();
+ const monthName=calendarMonth.toLocaleDateString("uz-UZ",{month:"long",year:"numeric"});
+ const first=new Date(y,m,1),offset=(first.getDay()+6)%7,start=new Date(y,m,1-offset),today=dateKey(new Date());
+ let cells="";
+ for(let i=0;i<42;i++){
+  const d=new Date(start);d.setDate(start.getDate()+i);const key=dateKey(d);
+  const events=calendarEvents.filter(e=>dateKey(e.date)===key);
+  const dots=events.slice(0,4).map(e=>`<span class="calendar-dot ${esc(e.type)}"></span>`).join("");
+  cells+=`<button type="button" class="calendar-day ${d.getMonth()!==m?"outside":""} ${key===today?"today":""} ${key===calendarSelected?"selected":""}" data-cal-day="${key}">${d.getDate()}<div class="calendar-dots">${dots}</div></button>`;
+ }
+ const chosen=calendarEvents.filter(e=>dateKey(e.date)===calendarSelected);
+ const eventHtml=chosen.length?chosen.map(e=>`<div class="calendar-event"><div class="calendar-event-icon">${calendarIcon(e.type)}</div><div class="calendar-event-content"><strong>${esc(e.title)}</strong><p>${esc(e.course_name)} · ${esc(new Date(e.date).toLocaleTimeString("uz-UZ",{hour:"2-digit",minute:"2-digit"}))}</p><p>${esc(e.description)}</p><span class="calendar-type">${esc(calendarTypeName(e.type))}</span></div></div>`).join(""):empty("Bu sanada tadbir yo‘q.");
+ let formHtml="";
+ if(isTeacher())formHtml=`<div class="card"><h3>➕ Yangi tadbir</h3><form id="calendarEventForm" class="form-grid">
+ ${selectField("course_id","Kurs",calendarCourses.map(c=>({value:c.id,label:c.title})),"Kursni tanlang")}
+ <div><label>Tadbir turi</label><select name="event_type"><option value="test">Nazorat ishi</option><option value="exam">Imtihon</option><option value="reminder">Eslatma</option></select></div>
+ <div class="wide">${field("title","Tadbir nomi","Masalan: Matematika imtihoni")}</div>
+ <div class="wide">${field("event_date","Sana va vaqt","","datetime-local")}</div>
+ <div class="wide"><label>Izoh</label><textarea name="description"></textarea></div>
+ <div class="wide"><button class="btn gold">Tadbirni saqlash</button></div></form></div>`;
+ page.innerHTML=`<div class="page-head"><div><h1>📅 Aqlli kalendar</h1><p class="muted">Darslar, uy vazifalari, nazorat va imtihonlar.</p></div><span class="badge gold">${calendarEvents.length} ta sana</span></div>
+ ${formHtml}<div class="card"><div class="calendar-toolbar"><div class="calendar-month">${esc(monthName)}</div><div class="calendar-actions"><button data-cal-action="prev">‹</button><button data-cal-action="today">Bugun</button><button data-cal-action="next">›</button></div></div>
+ <div class="calendar-grid">${["Du","Se","Ch","Pa","Ju","Sh","Ya"].map(d=>`<div class="calendar-weekday">${d}</div>`).join("")}${cells}</div>
+ <p class="muted">🔵 Vazifa · 🟠 Nazorat · 🔴 Imtihon · 🟢 Eslatma · 🟣 Dars</p></div>
+ <div class="card"><h3>${esc(dateFromKey(calendarSelected).toLocaleDateString("uz-UZ",{weekday:"long",day:"numeric",month:"long",year:"numeric"}))}</h3>${eventHtml}</div>`;
+ page.querySelectorAll("[data-cal-day]").forEach(b=>b.addEventListener("click",()=>{calendarSelected=b.dataset.calDay;renderCalendar().catch(fail)}));
+ page.querySelectorAll("[data-cal-action]").forEach(b=>b.addEventListener("click",()=>{
+  const a=b.dataset.calAction;
+  if(a==="prev")calendarMonth.setMonth(calendarMonth.getMonth()-1);
+  if(a==="next")calendarMonth.setMonth(calendarMonth.getMonth()+1);
+  if(a==="today"){calendarMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);calendarSelected=dateKey(new Date())}
+  if(a!=="today")calendarSelected=dateKey(calendarMonth);
+  renderCalendar().catch(fail);
+ }));
+ const form=$("calendarEventForm");
+ if(form)form.addEventListener("submit",async e=>{
+  e.preventDefault();const f=new FormData(form),eventDate=new Date(f.get("event_date"));
+  if(Number.isNaN(eventDate.getTime())){toast("Sana va vaqtni kiriting.");return}
+  try{
+   const {error}=await db.from("calendar_events").insert({
+    course_id:f.get("course_id"),teacher_id:user.id,title:String(f.get("title")||"").trim(),
+    description:String(f.get("description")||"").trim(),event_type:f.get("event_type"),event_date:eventDate.toISOString()
+   });
+   if(error)throw error;calendarSelected=dateKey(eventDate);calendarMonth=new Date(eventDate.getFullYear(),eventDate.getMonth(),1);
+   toast("Tadbir qo‘shildi.");await renderCalendar();
+  }catch(error){fail(error)}
+ });
+}
+/* SHAXSIY RIVOJLANISH */
+function getWeek(){
+ const monday=new Date();monday.setHours(0,0,0,0);
+ monday.setDate(monday.getDate()-(monday.getDay()+6)%7);
+ const next=new Date(monday);next.setDate(next.getDate()+7);
+ const sunday=new Date(next);sunday.setDate(sunday.getDate()-1);
+ return {start:dateKey(monday),startISO:monday.toISOString(),endISO:next.toISOString(),label:monday.toLocaleDateString("uz-UZ",{day:"numeric",month:"long"})+" — "+sunday.toLocaleDateString("uz-UZ",{day:"numeric",month:"long",year:"numeric"})};
+}
+async function renderPersonalGoals(){
+ if(activeRole!=="student"){$("page").innerHTML=empty("Shaxsiy rivojlanish bo‘limi o‘quvchilar uchun.");return}
+ const week=getWeek();
+ const [goals,grades,subs,attendance]=await Promise.all([
+  db.from("personal_goals").select("id,title,goal_type,target_value,week_start,created_at").eq("user_id",user.id).eq("week_start",week.start).order("created_at"),
+  db.from("grades").select("grade,created_at").eq("student_id",user.id).gte("created_at",week.startISO).lt("created_at",week.endISO),
+  db.from("submissions").select("id,submitted_at").eq("student_id",user.id).gte("submitted_at",week.startISO).lt("submitted_at",week.endISO),
+  db.from("attendance").select("status,attendance_date").eq("student_id",user.id).gte("attendance_date",week.start).lte("attendance_date",dateKey(new Date()))
+ ]);
+ if(goals.error)throw goals.error;if(grades.error)throw grades.error;if(subs.error)throw subs.error;if(attendance.error)throw attendance.error;
+ const g=goals.data||[],gr=grades.data||[],ss=subs.data||[],aa=attendance.data||[];
+ const avg=average(gr.map(x=>Number(x.grade)).filter(Number.isFinite)),present=aa.filter(x=>x.status==="present").length;
+ function getProgress(goal){
+  const type=goal.goal_type,current=type==="grade_average"?avg:type==="homework"?ss.length:present,target=Number(goal.target_value)||1;
+  return {current,target,percent:Math.min(100,current/target*100),complete:current>=target,unit:type==="grade_average"?"ball":type==="homework"?"vazifa":"dars"};
+ }
+ $("page").innerHTML=`<div class="page-head"><div><h1>🎯 Shaxsiy rivojlanish</h1><p class="muted">Haftalik maqsadlaringni belgilab, natijangni kuzat.</p></div><span class="badge gold">Premium</span></div>
+ <div class="card"><h3>📅 Joriy hafta</h3><p>${esc(week.label)}</p><div class="two"><div class="stats-box">O‘rtacha baho<div class="number">${avg.toFixed(1)}/10</div></div><div class="stats-box">Bajarilgan vazifalar<div class="number">${ss.length}</div></div></div></div>
+ <div class="card"><h3>➕ Yangi haftalik maqsad</h3><form id="personalGoalForm">
+ <div class="field"><label>Maqsad nomi</label><input name="title" maxlength="120" required placeholder="Masalan: Matematikadan 8 ball olish"></div>
+ <div class="field"><label>Maqsad turi</label><select name="goal_type" id="goalTypeSelect"><option value="grade_average">⭐ Baholar o‘rtachasi</option><option value="homework">📚 Uy vazifalari</option><option value="attendance">✅ Darsga qatnashish</option></select></div>
+ <div class="field"><label id="goalTargetLabel">Maqsad qiymati (ball, 1–10)</label><input type="number" name="target_value" min="1" max="10" step="0.5" value="8.5" required></div>
+ <button class="btn gold full">🎯 Maqsadni saqlash</button></form></div>
+ <div class="card"><h3>🏆 Mening haftalik maqsadlarim</h3>
+ ${g.length?g.map(goal=>{
+  const r=getProgress(goal);
+  return `<div class="goal-card"><div class="page-head"><div><h3>${esc(goal.title)}</h3><span class="muted">${goal.goal_type==="grade_average"?"Baholar o‘rtachasi":goal.goal_type==="homework"?"Uy vazifalari":"Davomat"}</span></div><button class="btn red" type="button" data-goal-delete="${esc(goal.id)}">O‘chirish</button></div>
+  <div class="goal-progress"><div class="goal-progress-fill ${r.complete?"complete":""}" style="width:${r.percent}%"></div></div>
+  <b>${Math.round(r.percent)}%</b> · ${r.complete?"🏆 Maqsad bajarildi!":r.current.toFixed(r.unit==="ball"?1:0)+" / "+r.target+" "+r.unit}</div>`;
+ }).join(""):empty("Hali maqsad qo‘ymading. Birinchi maqsadingni yarat!")}</div>
+ <div class="notice">Natijalar joriy haftadagi haqiqiy baholar, vazifalar va davomat asosida hisoblanadi.</div>`;
+ $("goalTypeSelect").addEventListener("change",e=>{
+  const input=document.querySelector('#personalGoalForm [name="target_value"]'),label=$("goalTargetLabel");
+  if(e.target.value==="grade_average"){label.textContent="Maqsad qiymati (1–10 ball)";input.max="10";input.value="8.5";input.step="0.5"}
+  else{label.textContent=e.target.value==="homework"?"Vazifalar soni":"Darslar soni";input.max="100";input.value="5";input.step="1"}
+ });
+ $("personalGoalForm").addEventListener("submit",async e=>{
+  e.preventDefault();const f=new FormData(e.currentTarget),type=f.get("goal_type"),target=Number(f.get("target_value")),max=type==="grade_average"?10:100;
+  if(!Number.isFinite(target)||target<1||target>max){toast("Maqsad qiymati noto‘g‘ri.");return}
+  try{
+   const {error}=await db.from("personal_goals").insert({user_id:user.id,title:String(f.get("title")).trim(),goal_type:type,target_value:target,week_start:week.start});
+   if(error)throw error;toast("Haftalik maqsad saqlandi.");await renderPersonalGoals();
+  }catch(error){fail(error)}
+ });
+ $("page").querySelectorAll("[data-goal-delete]").forEach(button=>button.addEventListener("click",async()=>{
+  if(!confirm("Maqsadni o‘chirasizmi?"))return;
+  try{
+   const {error}=await db.from("personal_goals").delete().eq("id",button.dataset.goalDelete).eq("user_id",user.id);
+   if(error)throw error;await renderPersonalGoals();
+  }catch(e){fail(e)}
+ }));
+}
+
+/* AI USTOZ */
+function aiMessageHtml(m){
+ const mine=m.role==="user";
+ return `<div class="ai-message ${mine?"user":"assistant"}"><div class="ai-message-icon">${mine?"👤":"🎓"}</div><div class="ai-bubble">${esc(m.content)}<small style="display:block;color:var(--muted);margin-top:6px">${mine?"Siz":"AI Ustoz"}</small></div></div>`;
+}
+async function aiRefreshChats(){
+ const {data,error}=await db.from("ai_tutor_chats").select("id,title,created_at,updated_at").eq("user_id",user.id).order("updated_at",{ascending:false});
+ if(error)throw error;aiChats=data||[];
+}
+function aiHistoryHtml(){
+ if(!aiChats.length)return empty("Hozircha saqlangan suhbatlar yo‘q.");
+ return aiChats.map(c=>`<div class="ai-history-item ${c.id===aiCurrentChatId?"active":""}">
+ <button class="ai-history-open" type="button" data-ai-open="${esc(c.id)}"><strong>${esc(c.title||"Yangi suhbat")}</strong><small>${esc(new Date(c.updated_at||c.created_at).toLocaleDateString("uz-UZ"))}</small></button>
+ <button class="ai-history-delete" type="button" data-ai-delete="${esc(c.id)}">🗑</button></div>`).join("");
+}
+async function renderAITutor(){
+ $("page").innerHTML=`<div class="card"><h3>🎓 AI Ustoz</h3><p>Suhbatlar yuklanmoqda...</p></div>`;
+ aiMessages=[];aiCurrentChatId=null;aiLoading=true;
+ await aiRefreshChats();aiLoading=false;
+ if(aiChats.length)await aiOpenChat(aiChats[0].id);else aiDraw();
+}
+async function aiOpenChat(id){
+ aiLoading=true;
+ const {data,error}=await db.from("ai_tutor_messages").select("role,content,created_at").eq("chat_id",id).eq("user_id",user.id).order("created_at",{ascending:true});
+ if(error){aiLoading=false;throw error}
+ aiCurrentChatId=id;aiMessages=(data||[]).map(x=>({role:x.role,content:x.content}));
+ aiLoading=false;aiDraw();
+}
+async function aiDeleteChat(id){
+ if(aiBusy)return;if(!confirm("Bu suhbat va barcha xabarlarini o‘chirasizmi?"))return;
+ const {error}=await db.from("ai_tutor_chats").delete().eq("id",id).eq("user_id",user.id);
+ if(error)throw error;if(aiCurrentChatId===id){aiCurrentChatId=null;aiMessages=[]}
+ await aiRefreshChats();aiDraw();toast("Suhbat o‘chirildi.");
+}
+function aiDraw(){
+ if(currentPage!=="ai-tutor")return;
+ const page=$("page"),messages=aiMessages.length?aiMessages.map(aiMessageHtml).join(""):`<div class="ai-message assistant"><div class="ai-message-icon">🎓</div><div class="ai-bubble">Assalomu alaykum! Men EduLife AI Ustoziman. Menga maktab fanlaridan savol bering. Mavzuni sodda tushuntiraman va masalalarni bosqichma-bosqich yechishga yordam beraman.</div></div>`;
+ page.innerHTML=`<div class="page-head"><div><h1>🎓 AI Ustoz</h1><p class="muted">Sun’iy intellekt yordamida bilim oling.</p></div><span class="badge gold">PREMIUM</span></div>
+ <div class="premium-hero"><h2>Sizning aqlli ustozingiz</h2><p>Mavzularni tushuntirish, masalalarni yechish, mashqlar tuzish va savollaringizga javob berish.</p></div>
+ <div class="ai-layout">
+ <aside class="ai-history"><div class="page-head"><b>🕘 Suhbatlar</b><span>${aiChats.length} ta</span></div><button class="btn gold full" id="aiNew">＋ Yangi suhbat</button><div class="ai-history-list" style="margin-top:12px">${aiHistoryHtml()}</div></aside>
+ <div class="ai-chat"><div class="ai-chat-head"><strong>EduLife AI Ustoz</strong><button class="ai-clear" id="aiDeleteCurrent" ${!aiCurrentChatId?"disabled":""}>🗑 O‘chirish</button></div>
+ <div class="ai-messages" id="aiMessages">${messages}${aiBusy?'<p class="muted">🎓 AI javob tayyorlamoqda...</p>':""}</div>
+ <form class="ai-composer" id="aiForm"><textarea id="aiInput" maxlength="1800" required placeholder="Savolingizni yozing..." ${aiBusy?"disabled":""}></textarea>
+ <div class="ai-send-row"><small class="muted">1800 belgigacha</small><button class="btn gold" ${aiBusy?"disabled":""}>Yuborish ➤</button></div></form></div></div>
+ <div class="ai-quick">
+ <button data-ai-prompt="Matematikadan kasrlarni sodda tushuntirib ber.">➗ Matematika</button>
+ <button data-ai-prompt="Ingliz tilida zamonlarni tushuntirib ber.">🇬🇧 Ingliz tili</button>
+ <button data-ai-prompt="Fizikadagi kuch va harakat mavzusini tushuntirib ber.">⚛️ Fizika</button>
+ <button data-ai-prompt="Menga 5 ta matematika mashqi tuzib ber. Javoblarini darhol ko‘rsatma.">📝 Mashqlar</button></div>
+ <div class="ai-warning">AI Ustoz javoblari yordamchi ma’lumot hisoblanadi. Muhim topshiriqlarni darslik yoki ustoz bilan ham tekshiring.</div>`;
+ const box=$("aiMessages");if(box)box.scrollTop=box.scrollHeight;
+ $("aiForm").addEventListener("submit",async e=>{e.preventDefault();await aiSend($("aiInput").value)});
+ $("aiNew").addEventListener("click",()=>{if(aiBusy)return;aiCurrentChatId=null;aiMessages=[];aiDraw()});
+ $("aiDeleteCurrent").addEventListener("click",()=>{if(aiCurrentChatId)aiDeleteChat(aiCurrentChatId).catch(fail)});
+ page.querySelectorAll("[data-ai-open]").forEach(b=>b.addEventListener("click",()=>aiOpenChat(b.dataset.aiOpen).catch(fail)));
+ page.querySelectorAll("[data-ai-delete]").forEach(b=>b.addEventListener("click",()=>aiDeleteChat(b.dataset.aiDelete).catch(fail)));
+ page.querySelectorAll("[data-ai-prompt]").forEach(b=>b.addEventListener("click",()=>aiSend(b.dataset.aiPrompt)));
+}
+async function aiCreateChat(first){
+ const title=first.replace(/\s+/g," ").trim().slice(0,65)||"Yangi suhbat";
+ const {data,error}=await db.from("ai_tutor_chats").insert({user_id:user.id,title}).select("id,title,created_at,updated_at").single();
+ if(error)throw error;aiCurrentChatId=data.id;aiChats.unshift(data);return data.id;
+}
+async function aiSaveMessage(chatId,role,content){
+ const {error}=await db.from("ai_tutor_messages").insert({chat_id:chatId,user_id:user.id,role,content});
+ if(error)throw error;
+ await db.from("ai_tutor_chats").update({updated_at:new Date().toISOString()}).eq("id",chatId).eq("user_id",user.id);
+}
+async function aiSend(raw){
+ if(aiBusy)return;
+ const message=String(raw||"").trim();
+ if(!message){toast("Avval savol yozing.");return}
+ if(message.length>1800){toast("Savol 1800 belgidan oshmasin.");return}
+ aiMessages.push({role:"user",content:message});aiBusy=true;aiDraw();
+ try{
+  if(!aiCurrentChatId)await aiCreateChat(message);
+  const chatId=aiCurrentChatId;await aiSaveMessage(chatId,"user",message);
+  const previous=aiMessages.slice(0,-1).slice(-6).map(x=>(x.role==="user"?"O‘quvchi: ":"AI Ustoz: ")+x.content).join("\n");
+  const context=previous?("Oldingi suhbat:\n"+previous+"\n\nYangi savol: "+message):message;
+  const {data,error}=await db.functions.invoke("ai-tutor",{body:{message:context}});
+  if(error)throw error;
+  const answer=String(data?.answer||data?.reply||data?.text||"").trim();
+  if(!data?.success||!answer)throw new Error(data?.error||"AI javobi olinmadi.");
+  aiMessages.push({role:"assistant",content:answer});
+  await aiSaveMessage(chatId,"assistant",answer);await aiRefreshChats();
+ }catch(error){
+  console.error("AI Ustoz:",error);
+  aiMessages.push({role:"assistant",content:"⚠️ "+(error.message||"AI Ustoz bilan bog‘lanib bo‘lmadi.")});
+ }finally{aiBusy=false;aiDraw()}
+}
+
+/* FORMLAR */
+const handlers={
+ issueTeacherForm:issueAccount,issueStudentForm:issueAccount,issueParentForm:issueAccount,
+ courseForm:createCourse,joinForm:joinCourse,gradeForm:createGrade,
+ attendanceForm:createAttendance,assignmentForm:createAssignment,
+ commentForm:createComment,messageForm:createMessage,scheduleForm:createSchedule,
+ profileForm:saveProfile
+};
+document.addEventListener("submit",async e=>{
+ const form=e.target;
+ if(form.classList.contains("submissionForm")){
+  e.preventDefault();const button=form.querySelector("button");if(button)button.disabled=true;
+  try{await submitAssignment(form)}catch(error){fail(error)}
+  finally{if(button)button.disabled=false}
+  return;
+ }
+ const handler=handlers[form.id];if(!handler)return;
+ e.preventDefault();const button=form.querySelector("button");if(button)button.disabled=true;
+ try{await handler(form)}catch(error){fail(error)}
+ finally{if(button)button.disabled=false}
+});
+
+/* ISHGA TUSHIRISH */
+async function start(){
+ if(!window.supabase?.createClient){
+  toast("Supabase kutubxonasi yuklanmadi. Internetni tekshiring.");return;
+ }
+ try{
+  db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
+   auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}
+  });
+  $("authScreen").style.display="grid";$("app").style.display="none";
+  const {data,error}=await db.auth.getSession();
+  if(error)throw error;
+
+  if(data?.session?.user){
+   const {data:p,error:profileError}=await db.from("profiles")
+    .select("id,full_name,role,username")
+    .eq("id",data.session.user.id).maybeSingle();
+   if(profileError)throw profileError;
+   if(p){
+    user=data.session.user;profile=p;activeRole=p.role;
+    await refreshAccess(true);
+    $("authScreen").style.display="none";$("app").style.display="block";
+    $("topName").textContent=profile.full_name||user.email;
+    $("topRole").textContent=roleName(activeRole);
+    $("avatar").textContent=(profile.full_name||"E").charAt(0).toUpperCase();
+    buildNav();
+    if(!(basicActive||premiumActive||isPlatformAdmin()))await go("premium");
+    else await go("dashboard");
+   }
+  }
+ }catch(e){fail(e)}
+}
+start();
+</script>
+</body>
+</html>
