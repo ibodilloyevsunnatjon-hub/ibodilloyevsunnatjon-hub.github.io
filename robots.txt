@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ibodilloyevsunnatjon-hub.github.io/sitemap.xml
